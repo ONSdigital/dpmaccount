@@ -1,25 +1,37 @@
 ## 'components_cohort' --------------------------------------------------------
 
+test_that("'components_cohort' fails with unfitted cohort", {
+  seed_list <- make_seed_account(seed_in = 1)
+  x_non_fitted <- sim_comod(is_new_cohort = TRUE)
+  expect_error(
+    components_cohort(x_non_fitted, what = "population", n_draw = 10, seed_list = seed_list),
+    "model not fitted"
+  )
+})
+
 test_that("'components_cohort' works with new cohort, what = population", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = TRUE)
   x_fitted <- fit(x)
-  ans <- components_cohort(x_fitted, what = "population", n_draw = 10)
+  ans <- components_cohort(x_fitted, what = "population", n_draw = 10, seed_list = seed_list)
   expect_identical(names(ans), c("population", "propn_adjusted"))
   expect_setequal(names(ans$population), c("age", "time", "population"))
 })
 
 test_that("'components_cohort' works with existing cohort, what = population", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = FALSE)
   x_fitted <- fit(x)
-  ans <- components_cohort(x_fitted, what = "population", n_draw = 10)
+  ans <- components_cohort(x_fitted, what = "population", n_draw = 10, seed_list = seed_list)
   expect_identical(names(ans), c("population", "propn_adjusted"))
   expect_setequal(names(ans$population), c("age", "time", "population"))
 })
 
 test_that("'components_cohort' works with new cohort, what = events", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = TRUE)
   x_fitted <- fit(x)
-  ans <- components_cohort(x_fitted, what = "events", n_draw = 10)
+  ans <- components_cohort(x_fitted, what = "events", n_draw = 10, seed_list = seed_list)
   expect_identical(names(ans), c("events", "propn_adjusted"))
   expect_identical(
     names(ans[["events"]]),
@@ -28,9 +40,10 @@ test_that("'components_cohort' works with new cohort, what = events", {
 })
 
 test_that("'components_cohort' works with existing cohort, what = events", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = FALSE)
   x_fitted <- fit(x)
-  ans <- components_cohort(x_fitted, what = "events", n_draw = 10)
+  ans <- components_cohort(x_fitted, what = "events", n_draw = 10, seed_list = seed_list)
   expect_identical(names(ans), c("events", "propn_adjusted"))
   expect_identical(
     names(ans[["events"]]),
@@ -39,9 +52,10 @@ test_that("'components_cohort' works with existing cohort, what = events", {
 })
 
 test_that("'components_cohort' works with existing cohort, what = sysmods", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = FALSE)
   x_fitted <- fit(x)
-  ans <- components_cohort(x_fitted, what = "sysmods", n_draw = 10)
+  ans <- components_cohort(x_fitted, what = "sysmods", n_draw = 10, seed_list = seed_list)
   expect_identical(names(ans), c("sysmods", "propn_adjusted"))
   expect_identical(
     names(ans[["sysmods"]]),
@@ -55,11 +69,13 @@ test_that("'components_cohort' works with existing cohort, what = sysmods", {
 })
 
 test_that("'components_cohort' works with new cohort, what = population, events", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = FALSE)
   x_fitted <- fit(x)
   ans <- components_cohort(x_fitted,
     what = c("population", "events"),
-    n_draw = 10
+    n_draw = 10,
+    seed_list = seed_list
   )
   expect_identical(names(ans), c("population", "events", "propn_adjusted"))
   times_popn <- unique(ans$population$time)
@@ -68,6 +84,7 @@ test_that("'components_cohort' works with new cohort, what = population, events"
 })
 
 test_that("'components_cohort' works with new cohort, what = everything", {
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(scale_sd = 0.3)
   x_fitted <- fit(x)
   ans <- components_cohort(x_fitted,
@@ -76,7 +93,8 @@ test_that("'components_cohort' works with new cohort, what = everything", {
       "rates", "sysmods", "datamods",
       "data_population", "data_events"
     ),
-    n_draw = 10
+    n_draw = 10,
+    seed_list = seed_list
   )
   expect_identical(names(ans), c(
     "population", "events", "exposure",
@@ -89,10 +107,11 @@ test_that("'components_cohort' works with new cohort, what = everything", {
 ## 'components_cohort_account' ------------------------------------------------
 
 test_that("'components_cohort_account' works - new cohort", {
+  seed_list <- make_seed_account(seed_in = 1)
   comod <- sim_comod(is_new_cohort = TRUE)
   comod <- fit(comod)
   n_draw <- 10
-  ans <- components_cohort_account(comod, n_draw = n_draw)
+  ans <- components_cohort_account(comod, n_draw = n_draw, seed_list = seed_list)
   expect_identical(names(ans), c("population", "events", "exposure", "propn_adjusted"))
   expect_equal(
     ans$population$population[[10]] - ans$population$population[[1]],
@@ -104,10 +123,11 @@ test_that("'components_cohort_account' works - new cohort", {
 })
 
 test_that("'components_cohort_account' works - existing cohort", {
+  seed_list <- make_seed_account(seed_in = 1)
   comod <- sim_comod()
   comod <- fit(comod)
   n_draw <- 10
-  ans <- components_cohort_account(comod, n_draw = n_draw)
+  ans <- components_cohort_account(comod, n_draw = n_draw, seed_list = seed_list)
   expect_identical(names(ans), c("population", "events", "exposure", "propn_adjusted"))
   expect_equal(
     ans$population$population[[11L]] - ans$population$population[[1L]],
@@ -140,30 +160,32 @@ test_that("'components_cohort_data' works", {
 ## 'components_cohort_datamods' -----------------------------------------------
 
 test_that("'components_cohort_datamods' works - has parameters", {
-  set.seed(0)
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(scale_sd = 0.1)
   x <- fit(x)
   n_draw <- 10
-  comp_acc <- components_cohort_account(x, n_draw = n_draw)
+  comp_acc <- components_cohort_account(x, n_draw = n_draw, seed_list = seed_list)
   ans <- components_cohort_datamods(
     object = x,
     population = comp_acc$population,
-    events = comp_acc$events
+    events = comp_acc$events,
+    seed_list = seed_list
   )
   expect_true(nrow(ans) > 0L)
   expect_identical(names(ans), c("series", "data", "par", "value"))
 })
 
 test_that("'components_cohort_datamods' works - no parameters", {
-  set.seed(0)
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod()
   x <- fit(x)
   n_draw <- 10
-  comp_acc <- components_cohort_account(x, n_draw = n_draw)
+  comp_acc <- components_cohort_account(x, n_draw = n_draw, seed_list = seed_list)
   ans <- components_cohort_datamods(
     object = x,
     population = comp_acc$population,
-    events = comp_acc$events
+    events = comp_acc$events,
+    seed_list = seed_list
   )
   expect_identical(nrow(ans), 0L)
   expect_identical(names(ans), c("series", "data", "par", "value"))
@@ -173,15 +195,16 @@ test_that("'components_cohort_datamods' works - no parameters", {
 ## 'components_cohort_rates' --------------------------------------------------
 
 test_that("'components_cohort_rates' works - no births", {
-  set.seed(0)
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = TRUE)
   x <- fit(x)
   n_draw <- 10
-  account <- components_cohort_account(x, n_draw = n_draw)
+  account <- components_cohort_account(x, n_draw = n_draw, seed_list = seed_list)
   ans <- components_cohort_rates(
     object = x,
     account = account,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_list = seed_list
   )
   expect_true(is.data.frame(ans))
   expect_identical(names(ans), c("time", "age", "births", "deaths", "ins", "outs"))
@@ -189,15 +212,16 @@ test_that("'components_cohort_rates' works - no births", {
 })
 
 test_that("'components_cohort_rates' works - has births", {
-  set.seed(0)
+  seed_list <- make_seed_account(seed_in = 1)
   x <- sim_comod(is_new_cohort = FALSE)
   x <- fit(x)
   n_draw <- 10
-  account <- components_cohort_account(x, n_draw = n_draw)
+  account <- components_cohort_account(x, n_draw = n_draw, seed_list = seed_list)
   ans <- components_cohort_rates(
     object = x,
     account = account,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_list = seed_list
   )
   expect_true(is.data.frame(ans))
   expect_identical(names(ans), c("time", "age", "births", "deaths", "ins", "outs"))
@@ -208,7 +232,6 @@ test_that("'components_cohort_rates' works - has births", {
 ## 'components_cohort_sysmods' ------------------------------------------------
 
 test_that("'components_cohort_sysmods' works", {
-  set.seed(0)
   x <- sim_comod(is_new_cohort = TRUE)
   x <- fit(x)
   n_draw <- 5

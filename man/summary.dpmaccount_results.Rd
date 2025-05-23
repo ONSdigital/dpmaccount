@@ -4,13 +4,10 @@
 \alias{summary.dpmaccount_results}
 \title{Summarise results from a call to estimate_account}
 \usage{
-\method{summary}{dpmaccount_results}(object, na_rm = FALSE, ...)
+\method{summary}{dpmaccount_results}(object, ...)
 }
 \arguments{
 \item{object}{Object of class \code{"dpmaccount_results"}.}
-
-\item{na_rm}{Whether to convert \code{NA}s to \code{0}s before
-calculating results.}
 
 \item{...}{Currently ignored.}
 }

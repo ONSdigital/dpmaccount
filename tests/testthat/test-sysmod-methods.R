@@ -11,7 +11,7 @@ test_that("'get_classif_vars' works with valid inputs", {
   classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
   classif_vars <- tibble::tibble(classif_vars)
   mean <- classif_vars
-  mean$mean <- seq_len(nrow(mean))
+  mean$mean <- seq_len(nrow(mean)) / 1000
   disp <- 0.1
   nm_series <- "births"
   mod <- sysmod(
@@ -35,7 +35,7 @@ test_that("'get_nm_series' works with valid inputs", {
   classif_vars$cohort <- with(classif_vars, time - age - triangle)
   classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
   mean <- classif_vars
-  mean$mean <- seq_len(nrow(mean))
+  mean$mean <- seq_len(nrow(mean)) / 1000
   disp <- 0.1
   nm_series <- "births"
   mod <- sysmod(
@@ -59,7 +59,7 @@ test_that("'make_cosysmod_df' works with valid inputs - disp is number, sysmod h
   classif_vars$cohort <- with(classif_vars, time - age - triangle)
   classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
   mean <- classif_vars
-  mean$mean <- seq_len(nrow(mean))
+  mean$mean <- seq_len(nrow(mean)) / 1000
   disp <- 0.1
   nm_series <- "births"
   mod <- sysmod(

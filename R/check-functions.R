@@ -1,6 +1,8 @@
 ## HAS_TESTS
 #' Check that an age variable is valid
 #'
+#' A valid age variable is a non-missing, integer value of 0 or greater
+#'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
 #'
@@ -30,6 +32,9 @@ check_age <- function(df, nm_df) {
 
 ## HAS_TESTS
 #' Test whether an age variable has complete set of levels
+#'
+#' For example, if the minimum age is 0 and the maximum age is 10 test if all ages between
+#' the minimum and maximum are present i.e. are ages 1,2,3,4,5,6,7,8 and 9 also present in the data?
 #'
 #' Used with function 'check_df_sysmod' (which requires
 #' complete levels), but not with functions 'check_df_data'
@@ -82,9 +87,12 @@ check_age_complete <- function(df, nm_df, is_births) {
 ## HAS_TESTS
 #' Put 'nm_series' into expected form
 #'
+#' nm_series should correspond to one
+#' of the strings in the 'choices' list
+#'
 #' @param nm_series Name of the demographic series
 #'
-#' @returns A string
+#' @returns A string corresponding to one of the strings in the 'choices' list, or an error
 #'
 #' @noRd
 check_and_tidy_nm_series <- function(nm_series) {
@@ -102,6 +110,11 @@ check_and_tidy_nm_series <- function(nm_series) {
 ## HAS_TESTS
 #' Check that classification variables include
 #' all possible combinations
+#'
+#' Find the product of the distinct values of each of age, sex and time (if present in the dataset)
+#' to get the number of expected rows/distinct combinations. If the dataset contains age, cohort
+#' and time variables, we expect the data broken down by cohort and so double the number of expected rows.
+#' Finally check if the number of rows in the dataset is less than expected.
 #'
 #' Used with function 'check_df_sysmod' (which requires
 #' complete levels), but not with functions 'check_df_data'
@@ -179,7 +192,7 @@ check_classif_no_dup <- function(df, nm_df) {
 
 
 ## HAS_TESTS
-#' Check that a cohort variable is valid
+#' Check that a cohort variable is a non-missing integer
 #'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
@@ -210,6 +223,9 @@ check_cohort <- function(df, nm_df) {
 ## HAS_TESTS
 #' Check that a cohort is consistent with
 #' age and time columns, if present
+#'
+#' Test whether time - cohort - age = 0 or time - cohort - age = 1
+#' since no other values are possible
 #'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
@@ -250,6 +266,13 @@ check_cohort_consistent <- function(df, nm_df) {
 ## HAS_TESTS
 #' Check 'collapse' argument is NULL or a vector
 #' formed from "age", "sex", "cohort"
+#'
+#' Collapsing refers to aggregating over one or more variables
+#' First check that the collapse variable argument is a character vector with non missing
+#' and non-duplicate values
+#' Next check that the variable names are spelled correctly and report if not
+#' Finally ensure that the user does not wish to collapse simultaneously over
+#' "age", "cohort", and "time"
 #'
 #' @param collapse A character vector or NULL
 #'
@@ -298,8 +321,13 @@ check_collapse <- function(collapse, can_collapse_time) {
 
 
 ## HAS_TESTS
+#'
 #' Check that data models have the right class
 #' and are mutually compatible
+#'
+#' Each data model should have class 'dpmaccount_datamod' and a unique name.
+#' There should be one data model each for births and deaths and they should
+#' have the same age and sex categories.
 #'
 #' @param datamods
 #'
@@ -374,8 +402,10 @@ check_datamods <- function(datamods) {
 }
 
 
-
 #' Check a degrees-of-freedom argument
+#'
+#' Test that degrees of freedom argument is a positive integer of length 1
+#' and reports if it is NA, infinite, non-positive or not numeric
 #'
 #' @param df Degrees of freedom.
 #' A positive finite double.
@@ -418,10 +448,6 @@ check_df <- function(df) {
   }
   invisible(TRUE)
 }
-
-
-
-
 
 
 
@@ -540,7 +566,9 @@ check_df_data <- function(df, nm_df, is_popn) {
   check_measure_var(
     df = df,
     nm_df = nm_df,
-    nm_measure_var = "count"
+    nm_measure_var = "count",
+    min = NULL,
+    max = NULL
   )
   ## return
   invisible(TRUE)
@@ -565,7 +593,7 @@ check_df_data <- function(df, nm_df, is_popn) {
 #' @param nm_measure_var Name of the measurement variable.
 #' @param is_popn Whether the data is
 #' population counts.
-#' @param data Data frame constaining dataset
+#' @param data Data frame containing dataset
 #' being modelled.
 #'
 #' @returns TRUE, invisibly
@@ -610,7 +638,9 @@ check_df_dataconst <- function(df,
   check_measure_var(
     df = df,
     nm_df = nm_df,
-    nm_measure_var = nm_measure_var
+    nm_measure_var = nm_measure_var,
+    min = NULL,
+    max = NULL
   )
   for (nm in c("count", ".is_na")) {
     if (nm %in% nms_df) {
@@ -711,12 +741,12 @@ check_df_measure_nm_complete <- function(df, nm_df, nm_measure_var) {
 
 
 ## HAS_TESTS
-#' Check whether all variable names in a data frame are valid
+#' Check whether all variable names in a data frame are valid and not duplicated
 #'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
 #' @param nm_measure_var Name of measurement variable
-#' @param is_popn Whether data frame describes population.#'
+#' @param is_popn Whether data frame describes population.
 #'
 #' @returns TRUE, invisibly
 #'
@@ -733,7 +763,7 @@ check_df_nms <- function(df, nm_df, nm_measure_var, is_popn) {
   if (i_dup > 0L) {
     stop(
       gettextf(
-        "data frame '%s' has two variables called \"%s\"",
+        "data frame '%s' has more than one variable called \"%s\"",
         nm_df,
         nms_df[[i_dup]]
       ),
@@ -760,7 +790,7 @@ check_df_nms <- function(df, nm_df, nm_measure_var, is_popn) {
 
 
 ## HAS_TESTS
-#' Check a 'mean' or 'disp' data frame in a
+#' Check a 'mean' or 'dispersion' data frame in a
 #' system model
 #'
 #' The data frame does not need to have all
@@ -768,15 +798,21 @@ check_df_nms <- function(df, nm_df, nm_measure_var, is_popn) {
 #' combinations of the variables that are present.
 #' The measurement variable cannot be NA.
 #'
+#' If values for measure variable
+#' outside [min_mean, max_mean],
+#' warnings are raised.
+#'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
 #' @param is_births Whether the data frame is
 #' describing birth rates or counts.
 #' @param nm_measure_var Name of measurement
 #' variable.
+#' @param min Minimum value expected for measure variable, or NULL.
+#' @param max Maximum value expected for measure variable, or NULL.
 #'
 #' @noRd
-check_df_sysmod <- function(df, nm_df, is_births, nm_measure_var) {
+check_df_sysmod <- function(df, nm_df, is_births, nm_measure_var, min, max) {
   ## data frame
   val <- checkmate::check_data_frame(df, any.missing = FALSE)
   if (!isTRUE(val)) {
@@ -865,7 +901,9 @@ check_df_sysmod <- function(df, nm_df, is_births, nm_measure_var) {
   check_measure_var(
     df = df,
     nm_df = nm_df,
-    nm_measure_var = nm_measure_var
+    nm_measure_var = nm_measure_var,
+    min = min,
+    max = max
   )
   ## return
   invisible(TRUE)
@@ -950,15 +988,22 @@ check_is_not_bth_dth <- function(nm_series) {
 ## HAS_TESTS
 #' Check that a measurement variable is valid
 #'
+#' A value is a valid if it is numeric, finite.
+#'
+#' Throws warning if values outside range
+#' specified by 'min' and 'max'.
+#'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
 #' @param nm_measure_var The name of the measurement
 #' variable.
+#' @param min A number, or NULL.
+#' @param max A number, or NULL.
 #'
 #' @returns TRUE, invisibly
 #'
 #' @noRd
-check_measure_var <- function(df, nm_df, nm_measure_var) {
+check_measure_var <- function(df, nm_df, nm_measure_var, min, max) {
   measure_var <- df[[nm_measure_var]]
   val <- checkmate::check_numeric(measure_var,
     finite = TRUE
@@ -974,6 +1019,28 @@ check_measure_var <- function(df, nm_df, nm_measure_var) {
       call. = FALSE
     )
   }
+  if (!all(is.na(measure_var)) && !is.null(min) && any(measure_var < min, na.rm = TRUE)) {
+    warning(gettextf(
+      paste(
+        "minimum value for variable '%s' in data frame '%s' is %s :",
+        "values this low might not be plausible, and might cause numerical problems"
+      ),
+      nm_measure_var,
+      nm_df,
+      min(measure_var, na.rm = TRUE)
+    ))
+  }
+  if (!all(is.na(measure_var)) && !is.null(max) && any(measure_var > max, na.rm = TRUE)) {
+    warning(gettextf(
+      paste(
+        "maximum value for variable '%s' in data frame '%s' is %s :",
+        "values this high might not be plausible, and might cause numerical problems"
+      ),
+      nm_measure_var,
+      nm_df,
+      max(measure_var, na.rm = TRUE)
+    ))
+  }
   invisible(TRUE)
 }
 
@@ -981,12 +1048,13 @@ check_measure_var <- function(df, nm_df, nm_measure_var) {
 ## HAS_TESTS
 #' Check that system and data models are consistent with each other
 #'
-#' Check that "deaths" models have the same categores for
+#' Check that "deaths" models have the same categories for
 #' classification variables - though the system model for
 #' deaths does not necessarily have all classification variables.
 #'
 #' Also check that the system model for births covers
-#' all the ages included in the births data.
+#' all the ages included in the births data. System models require
+#' a value for every cell in the account - data models do not.
 #'
 #' @param sysmods A list of objects of class
 #' "dpmaccount_sysmod"
@@ -1058,7 +1126,7 @@ check_mods <- function(sysmods, datamods) {
 #'
 #' @param nm_data Name of the dataset (a string)
 #'
-#' @returns TRUE, invisbly
+#' @returns TRUE, invisibly
 #'
 #' @noRd
 check_nm_data_clash <- function(nm_data) {
@@ -1079,6 +1147,32 @@ check_nm_data_clash <- function(nm_data) {
         txt,
         nm_data,
         paste(sprintf("\"%s\"", nms_series), collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+
+## HAS_TESTS
+#' Check that variable in data frame does not have any NAs
+#'
+#' @param df A data frame
+#' @param nm_x Name of variable
+#' @param nm_df Name of data frame to be used in error messages
+#'
+#' @returns TRUE, invisibly
+#'
+#' @noRd
+check_no_na <- function(df, nm_x, nm_df) {
+  x <- df[[nm_x]]
+  if (anyNA(x)) {
+    stop(
+      gettextf(
+        "variable '%s' in data frame '%s' has NAs",
+        nm_x,
+        nm_df
       ),
       call. = FALSE
     )
@@ -1168,6 +1262,8 @@ check_scale <- function(x, x_arg, zero_ok) {
 ## HAS_TESTS
 #' Check that a sex variable is valid
 #'
+#' A valid sex variable is a non-missing, character vector value, where every element is either 'Female' or 'Male'.
+#'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
 #'
@@ -1179,15 +1275,11 @@ check_sex <- function(df, nm_df) {
   if (is.factor(sex)) {
     sex <- as.character(sex)
   }
-  val <- checkmate::check_character(sex,
-    min.chars = 1L,
-    any.missing = FALSE
-  )
+  val <- checkmate::check_subset(unique(sex), c("Female", "Male"), empty.ok = FALSE)
   if (!isTRUE(val)) {
     stop(
       gettextf(
-        "problem with variable '%s' in data frame '%s' : %s",
-        "sex",
+        "problem with invalid coding for 'sex' in data frame '%s': %s",
         nm_df,
         val
       ),
@@ -1249,7 +1341,7 @@ check_sysmods <- function(sysmods) {
   if (i_dup > 0L) {
     stop(
       gettextf(
-        "two system models have the same value for '%s' [\"%s\"]",
+        "at least two system models have the same value for '%s' [\"%s\"]",
         "nm_series",
         nms_series[[i_dup]]
       ),
@@ -1294,6 +1386,8 @@ check_sysmods <- function(sysmods) {
 ## HAS_TESTS
 #' Check that 'time' variable is valid
 #'
+#' A valid time variable is a non-missing integer value
+#'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.
 #'
@@ -1322,6 +1416,9 @@ check_time <- function(df, nm_df) {
 
 ## HAS_TESTS
 #' Check that 'time' variable has complete intermediate levels
+#'
+#' For example, if the minimum time is 2015 and the maximum time is 2020, test if all times between
+#' the minimum and maximum are present i.e. are ages 2016, 2017, 2018 & 2019 also present in the data?
 #'
 #' @param df A data frame
 #' @param nm_df The name of the data frame.

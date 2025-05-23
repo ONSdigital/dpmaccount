@@ -259,12 +259,15 @@ datamods <- list(
 ```
 
 Once the system and data models are specified, estimation is
-straightforward:
+straightforward. For reproducibility, we also set a seed. Seeds are
+stored in the results object and so, if required, must be set at this
+stage.
 
 ``` r
 results <- estimate_account(
   sysmods = sysmods,
-  datamods = datamods
+  datamods = datamods,
+  seed = 0
 )
 ```
 
@@ -291,13 +294,6 @@ results
 #>   Estimation succeeded in 212 out of 212 cohorts
 ```
 
-The outputs consist of random draws. For reproducibility, we set the
-random seed.
-
-``` r
-set.seed(0)
-```
-
 Calling `summary()` on the results object produces an account with total
 counts and rates.
 
@@ -310,24 +306,24 @@ summary(results)
 #>  --- population ---
 #> 
 #>   time population
-#> 1 2019      56232
-#> 2 2020      56527
-#> 3 2021      56567
-#> 4 2022      56463
+#> 1 2019      56240
+#> 2 2020      56533
+#> 3 2021      56571
+#> 4 2022      56466
 #> 
 #>  --- events ---
 #> 
 #>   time births deaths  ins outs
-#> 1 2020    835    521 2090 2107
-#> 2 2021    761    531 2125 2312
-#> 3 2022    746    525 2196 2519
+#> 1 2020    835    521 2090 2108
+#> 2 2021    761    531 2125 2315
+#> 3 2022    746    525 2196 2520
 #> 
 #>  --- rates ---
 #> 
 #>   time births  deaths  ins   outs
-#> 1 2020 0.0148 0.00954 1990 0.0360
-#> 2 2021 0.0135 0.00952 2040 0.0396
-#> 3 2022 0.0132 0.00960 2100 0.0433
+#> 1 2020 0.0149 0.00957 1990 0.0363
+#> 2 2021 0.0134 0.00947 2040 0.0394
+#> 3 2022 0.0132 0.00972 2110 0.0433
 ```
 
 Function `diagnostics()` provides information on the performance of the
@@ -339,10 +335,10 @@ head(diag, 5)
 #> # A tibble: 5 × 10
 #>   cohort sex    nlminb_res nlminb_conv nlminb_msg       logpost var_nona var_pos
 #>    <int> <chr>  <lgl>      <lgl>       <chr>              <dbl> <lgl>    <lgl>  
-#> 1   1917 Female TRUE       TRUE        both X-converge…   -8.89 TRUE     TRUE   
-#> 2   1917 Male   TRUE       TRUE        relative conver…   -8.91 TRUE     TRUE   
-#> 3   1918 Female TRUE       TRUE        relative conver…  -25.0  TRUE     TRUE   
-#> 4   1918 Male   TRUE       TRUE        relative conver…  -25.0  TRUE     TRUE   
+#> 1   1917 Female TRUE       TRUE        both X-converge…   -8.88 TRUE     TRUE   
+#> 2   1917 Male   TRUE       TRUE        both X-converge…   -8.91 TRUE     TRUE   
+#> 3   1918 Female TRUE       TRUE        both X-converge…  -25.0  TRUE     TRUE   
+#> 4   1918 Male   TRUE       TRUE        both X-converge…  -25.0  TRUE     TRUE   
 #> 5   1919 Female TRUE       TRUE        relative conver…  -40.8  TRUE     TRUE   
 #> # ℹ 2 more variables: var_nearpos <lgl>, success <lgl>
 ```
@@ -376,11 +372,11 @@ head(res_population, 5)
 #> # A tibble: 5 × 9
 #>   cohort sex     time   age gl_report_popn population    population.fitted
 #>    <int> <chr>  <int> <int>          <dbl> <list>                    <dbl>
-#> 1   1917 Female  2019   102              0 <dbl [1,000]>             1.19 
-#> 2   1917 Male    2019   102              0 <dbl [1,000]>             1.15 
-#> 3   1918 Female  2019   101              0 <dbl [1,000]>             0.885
-#> 4   1918 Female  2020   102              0 <dbl [1,000]>             0.994
-#> 5   1918 Male    2019   101              0 <dbl [1,000]>             0.840
+#> 1   1917 Female  2019   102              0 <dbl [1,000]>             1.16 
+#> 2   1917 Male    2019   102              0 <dbl [1,000]>             1.12 
+#> 3   1918 Female  2019   101              0 <dbl [1,000]>             0.840
+#> 4   1918 Female  2020   102              0 <dbl [1,000]>             0.974
+#> 5   1918 Male    2019   101              0 <dbl [1,000]>             0.808
 #> # ℹ 2 more variables: population.lower <dbl>, population.upper <dbl>
 ```
 
@@ -422,14 +418,14 @@ results %>%
 #> # A tibble: 8 × 7
 #>   sex     time gl_report_popn population    population.fitted population.lower
 #>   <chr>  <int>          <dbl> <list>                    <dbl>            <dbl>
-#> 1 Female  2019          26530 <dbl [1,000]>            26573.           26491.
-#> 2 Female  2020          26672 <dbl [1,000]>            26703.           26630.
-#> 3 Female  2021          26759 <dbl [1,000]>            26765.           26692.
-#> 4 Female  2022          26738 <dbl [1,000]>            26697.           26612.
-#> 5 Male    2019          29551 <dbl [1,000]>            29659.           29566.
-#> 6 Male    2020          29749 <dbl [1,000]>            29824.           29741.
-#> 7 Male    2021          29803 <dbl [1,000]>            29802.           29717.
-#> 8 Male    2022          29871 <dbl [1,000]>            29765.           29674.
+#> 1 Female  2019          26530 <dbl [1,000]>            26578.           25989.
+#> 2 Female  2020          26672 <dbl [1,000]>            26706.           26125.
+#> 3 Female  2021          26759 <dbl [1,000]>            26767.           26189.
+#> 4 Female  2022          26738 <dbl [1,000]>            26699.           26115.
+#> 5 Male    2019          29551 <dbl [1,000]>            29662.           28955.
+#> 6 Male    2020          29749 <dbl [1,000]>            29827.           29125.
+#> 7 Male    2021          29803 <dbl [1,000]>            29804.           29117.
+#> 8 Male    2022          29871 <dbl [1,000]>            29767.           29063.
 #> # ℹ 1 more variable: population.upper <dbl>
 ```
 
@@ -549,11 +545,11 @@ head(rates_emig, 5)
 #> # A tibble: 5 × 7
 #>     age  time direct series fitted   lower  upper
 #>   <int> <int>  <dbl> <chr>   <dbl>   <dbl>  <dbl>
-#> 1     0  2022 0.0267 prior  0.0313 0.0102  0.0643
-#> 2     0  2022 0.0267 post   0.0297 0.0203  0.0404
-#> 3     1  2022 0.0429 prior  0.0356 0.0115  0.0726
-#> 4     1  2022 0.0429 post   0.0404 0.0303  0.0517
-#> 5    10  2022 0.0206 prior  0.0218 0.00721 0.0412
+#> 1     0  2022 0.0267 prior  0.0314 0.0102  0.0647
+#> 2     0  2022 0.0267 post   0.0303 0.0214  0.0416
+#> 3     1  2022 0.0429 prior  0.0361 0.0112  0.0746
+#> 4     1  2022 0.0429 post   0.0402 0.0300  0.0524
+#> 5    10  2022 0.0206 prior  0.0221 0.00719 0.0447
 ```
 
 ``` r
@@ -604,11 +600,11 @@ head(rates_immig, 5)
 #> # A tibble: 5 × 7
 #>     age  time direct series fitted lower upper
 #>   <int> <int>  <dbl> <chr>   <dbl> <dbl> <dbl>
-#> 1     0  2022     20 prior    22.0  7.12  44.6
-#> 2     0  2022     20 post     22.2 15.9   29.2
-#> 3     1  2022     29 prior    25.8  8.29  54.1
-#> 4     1  2022     29 post     28.0 20.4   36.6
-#> 5    10  2022     15 prior    12.6  4.00  24.9
+#> 1     0  2022     20 prior    23.0  7.47  47.4
+#> 2     0  2022     20 post     22.2 15.0   30.3
+#> 3     1  2022     29 prior    25.9  8.01  53.5
+#> 4     1  2022     29 post     28.3 20.7   38.0
+#> 5    10  2022     15 prior    12.7  4.14  25.7
 ```
 
 ``` r

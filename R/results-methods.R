@@ -159,6 +159,7 @@ components.dpmaccount_results <- function(object,
   cohort <- object$cohort
   sex <- object$sex
   fitted <- object$fitted
+  seed_list <- object$seed_list
   ## check inputs
   checkmate::assert_subset(what,
     choices = choices_what,
@@ -189,7 +190,8 @@ components.dpmaccount_results <- function(object,
   results <- lapply(fitted,
     components_cohort,
     what = what,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_list = seed_list
   )
   ## join cohort-level results together as tibbles
   ans <- vector(mode = "list", length = length(what))
@@ -539,20 +541,18 @@ print.dpmaccount_results <- function(x, ...) {
 #' sex, or cohort detail.)
 #'
 #' @param object Object of class `"dpmaccount_results"`.
-#' @param na_rm Whether to convert `NA`s to `0`s before
-#' calculating results.
 #' @param ... Currently ignored.
 #'
 #' @returns A named list, invisibly.
 #'
 #' @rdname summary.dpmaccount_results
 #' @export
-summary.dpmaccount_results <- function(object, na_rm = FALSE, ...) {
+summary.dpmaccount_results <- function(object, ...) {
   ## extract info
   l <- components(object,
     what = c("population", "events", "rates"),
     collapse = c("age", "sex", "cohort"),
-    na_rm = na_rm
+    na_rm = TRUE
   )
   population <- with(
     l$population,
@@ -581,22 +581,31 @@ summary.dpmaccount_results <- function(object, na_rm = FALSE, ...) {
       outs = signif(outs.fitted, 3)
     )
   )
-  val <- list(
-    population = population,
-    events = events,
-    rates = rates
-  )
   diag <- diagnostics(object)
   n_cohort <- nrow(diag)
   n_success <- sum(diag$success)
+  ans <- list(
+    population = population,
+    events = events,
+    rates = rates,
+    n_cohort = n_cohort,
+    n_success = n_success
+  )
+  class(ans) <- paste0(class(object)[[1L]], "_summary")
+  ans
+}
+
+
+#' @export
+print.dpmaccount_results_summary <- function(x, ...) {
   ## make strings
   str_title <- sprintf(
     "Summary of object of class \"%s\"\n",
-    class(object)[[1L]]
+    gsub("_summary", "", class(x)[[1L]])
   )
   str_success <- sprintf(
     " Estimation succeeded in %d out of %d cohorts\n",
-    n_success, n_cohort
+    x$n_success, x$n_cohort
   )
   str_popn <- " --- population ---\n"
   str_events <- " --- events ---\n"
@@ -608,16 +617,16 @@ summary.dpmaccount_results <- function(object, na_rm = FALSE, ...) {
   cat("\n")
   cat(str_popn)
   cat("\n")
-  print(population)
+  print(x$population)
   cat("\n")
   cat(str_events)
   cat("\n")
-  print(events)
+  print(x$events)
   cat("\n")
   cat(str_rates)
   cat("\n")
-  print(rates)
+  print(x$rates)
   cat("\n")
   ## return
-  invisible(val)
+  invisible(x)
 }

@@ -76,14 +76,22 @@
 #' sysmod_deaths
 #' @export
 sysmod <- function(mean, disp = 0, nm_series) {
+  min_mean <- 1e-6 ## these could potentially
+  max_mean <- 10 ## be made visible to users
   nm_series <- check_and_tidy_nm_series(nm_series)
   check_is_events(nm_series)
   is_births <- nm_series == "births"
+  is_ins <- nm_series == "ins"
+  if (is_ins) {
+    max_mean <- NULL
+  }
   check_df_sysmod(
     df = mean,
     nm_df = "mean",
     is_births = is_births,
-    nm_measure_var = "mean"
+    nm_measure_var = "mean",
+    min = min_mean,
+    max = max_mean
   )
   mean <- tibble::tibble(mean)
   if (is.data.frame(disp)) {
@@ -91,7 +99,9 @@ sysmod <- function(mean, disp = 0, nm_series) {
       df = disp,
       nm_df = "disp",
       is_births = is_births,
-      nm_measure_var = "disp"
+      nm_measure_var = "disp",
+      min = NULL,
+      max = NULL
     )
     disp <- tibble::tibble(disp)
   } else if (is.numeric(disp)) {

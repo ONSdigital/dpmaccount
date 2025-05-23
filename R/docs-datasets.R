@@ -163,7 +163,7 @@
 
 ## 'gl_cover_sd_popn' ---------------------------------------------------------
 
-#' Standard error for coverage ratios from simulated coverage survey
+#' Standard deviation for coverage ratios from simulated coverage survey
 #' for Greenland population data
 #'
 #' @format A data frame with columns
@@ -187,7 +187,7 @@
 
 ## 'gl_cover_sd_immig' --------------------------------------------------------
 
-#' Standard error for coverage ratios from simulated coverage survey
+#' Standard deviation for coverage ratios from simulated coverage survey
 #' for Greenland immigration data
 #'
 #' @format A data frame with columns
@@ -211,7 +211,7 @@
 
 ## 'gl_cover_sd_emig' ---------------------------------------------------------
 
-#' Standard error for coverage ratios from simulated coverage survey
+#' Standard deviation for coverage ratios from simulated coverage survey
 #' for Greenland emigration data
 #'
 #' @format A data frame with columns

@@ -2,7 +2,7 @@
 
 test_that("'as_tibble' works", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans_obtained <- tibble::as_tibble(x)
   ans_expected <- tibble::tibble(
@@ -18,7 +18,7 @@ test_that("'as_tibble' works", {
 
 test_that("'components' works when what is population", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x, n_draw = 5)
   expect_setequal(ans$age, args$datamods[[1]]$data$age)
@@ -37,7 +37,7 @@ test_that("'components' works when what is population", {
 
 test_that("'components' works when what is population - need to adjust popn", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   x$fitted[[1]]$mean[] <- c(1, 3, 4)
   ans <- components(x, n_draw = 500)
@@ -46,7 +46,7 @@ test_that("'components' works when what is population - need to adjust popn", {
 
 test_that("'components' works when what is 'events'", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = "events",
@@ -65,7 +65,7 @@ test_that("'components' works when what is 'events'", {
 
 test_that("'components' works when what is 'exposure'", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = "exposure",
@@ -79,7 +79,7 @@ test_that("'components' works when what is 'exposure'", {
 
 test_that("'components' works when what is 'rates'", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = "rates",
@@ -100,7 +100,7 @@ test_that("'components' works when what is 'rates'", {
 
 test_that("'components' works when what is 'sysmods'", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = "sysmods",
@@ -120,7 +120,7 @@ test_that("'components' works when what is 'sysmods'", {
 
 test_that("'components' works when what is data_population, data_events", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = c("data_population", "data_events"),
@@ -140,7 +140,7 @@ test_that("'components' works when what is data_population, data_events", {
 
 test_that("'components' works when what is everything", {
   set.seed(0)
-  args <- sim_args_estimate(scale_sd = 0.1)
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models(scale_sd = 0.1))
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = c(
@@ -158,7 +158,7 @@ test_that("'components' works when what is everything", {
 
 test_that("'components' works collapse is 'cohort'", {
   set.seed(0)
-  args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- components(x,
     what = c(
@@ -182,8 +182,84 @@ test_that("'components' works collapse is 'cohort'", {
 
 test_that("'diagnostics' works", {
   set.seed(0)
-  args <- sim_args_estimate()
+  # args <- sim_args_estimate()
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models())
   x <- do.call(estimate_account, args)
   ans <- diagnostics(x)
   expect_true(tibble::is_tibble(ans))
+})
+
+
+
+## 'summary' ------------------------------------------------------------------
+
+test_that("summary.dpmaccount_results works, including printing", {
+  set.seed(0)
+  sysmod_births <- sysmod(
+    mean = gl_sysmod_mean_births,
+    disp = 0.2,
+    nm_series = "births"
+  )
+  sysmod_deaths <- sysmod(
+    mean = gl_sysmod_mean_deaths,
+    disp = 0.2,
+    nm_series = "deaths"
+  )
+  sysmod_ins <- sysmod(
+    mean = gl_sysmod_mean_immig,
+    disp = 0.2,
+    nm_series = "ins"
+  )
+  sysmod_outs <- sysmod(
+    mean = gl_sysmod_mean_emig,
+    disp = 0.2,
+    nm_series = "outs"
+  )
+  sysmods <- list(
+    sysmod_births,
+    sysmod_deaths,
+    sysmod_ins,
+    sysmod_outs
+  )
+  datamod_popn <- datamod_norm(
+    data = gl_report_popn,
+    sd = gl_cover_sd_popn,
+    nm_series = "population"
+  )
+  datamod_births <- datamod_exact(
+    data = gl_report_births,
+    nm_series = "births"
+  )
+  datamod_deaths <- datamod_exact(
+    data = gl_report_deaths,
+    nm_series = "deaths"
+  )
+  datamod_ins <- datamod_norm(
+    data = gl_report_immig,
+    sd = gl_cover_sd_immig,
+    nm_series = "ins"
+  )
+  datamod_outs <- datamod_norm(
+    data = gl_report_emig,
+    sd = gl_cover_sd_emig,
+    nm_series = "outs"
+  )
+  datamods <- list(
+    datamod_popn = datamod_popn,
+    datamod_births = datamod_births,
+    datamod_deaths = datamod_deaths,
+    datamod_ins = datamod_ins,
+    datamod_outs = datamod_outs
+  )
+  results <- estimate_account(
+    sysmods = sysmods,
+    datamods = datamods
+  )
+  ans <- summary(results)
+  expect_s3_class(ans, "dpmaccount_results_summary")
+  expect_identical(
+    names(ans),
+    c("population", "events", "rates", "n_cohort", "n_success")
+  )
+  expect_false(anyNA(unlist(ans)))
 })

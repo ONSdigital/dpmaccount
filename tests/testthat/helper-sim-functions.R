@@ -1,28 +1,232 @@
-#' Simulate arguments for function 'estimate_account'
+## HAS_TESTS
+#' Generate future stock, births, deaths, ins, outs for a single cohort given
+#' a set of system rates and an initial population
+#'
+#' @param is_new_cohort Whether the cohort was born during
+#' the estimation period
+#' @param prior_stk_init Prior for initial stock.
+#' List with elements 'mean' and 'sd'.
+#' @param sysmod_bth, sysmod_dth, sysmod_ins, sysmod_outs
+#' System models for births, deaths, ins, and outs, each
+#' a list with elements 'mean' and 'disp'.
+#'
+#' @returns A named list of vectors of doubles, with
+#' elements 'val_stk', 'val_bth', 'val_dth',
+#' 'val_ins', and 'val_outs'.
+#'
+#'
+#' @noRd
+project_cohort <- function(is_new_cohort,
+                           prior_stk_init,
+                           sysmod_bth,
+                           sysmod_dth,
+                           sysmod_ins,
+                           sysmod_outs) {
+  ## vectors to hold results
+  K <- length(sysmod_dth$mean)
+  val_stk <- numeric(length = K + 1L)
+  val_dth <- numeric(length = K)
+  val_ins <- numeric(length = K)
+  val_outs <- numeric(length = K)
+  ## initial value for stock
+  mean_stk_init <- prior_stk_init$mean
+  sd_stk_init <- prior_stk_init$sd
+  if (is.finite(sd_stk_init)) {
+    val_stk[[1L]] <- max(
+      round(stats::rnorm(
+        n = 1L,
+        mean = mean_stk_init,
+        sd = sd_stk_init
+      )),
+      0
+    )
+  } else {
+    val_stk[[1L]] <- stats::rpois(
+      n = 1L,
+      lambda = mean_stk_init
+    )
+  }
+  ## iterate through triangles
+  for (k in seq_len(K)) {
+    ## generate ins
+    val_ins[[k]] <- with(
+      sysmod_ins,
+      stats::rnbinom(
+        n = 1L,
+        size = 1 / disp[[k]],
+        mu = mean[[k]]
+      )
+    )
+    ## half of the ins enter at the start, half at the end
+    val_ins_start <- whole_num_halve(val_ins[[k]])
+    val_ins_end <- val_ins[[k]] - val_ins_start
+    stk_start <- val_stk[[k]] + val_ins_start
+    ## generate rates for deaths and outs
+    rate_dth <- with(
+      sysmod_dth,
+      stats::rgamma(
+        n = 1L,
+        shape = 1 / disp[[k]],
+        rate = 1 / (disp[[k]] * mean[[k]])
+      )
+    )
+    rate_outs <- with(
+      sysmod_outs,
+      stats::rgamma(
+        n = 1L,
+        shape = 1 / disp[[k]],
+        rate = 1 / (disp[[k]] * mean[[k]])
+      )
+    )
+    ## turn into multinomial draws of deaths and outs
+    prob_exit <- 1 - exp(-0.5 * (rate_dth + rate_outs))
+    val_exit <- stats::rbinom(
+      n = 1L,
+      size = stk_start,
+      prob = prob_exit
+    )
+    prob_dth <- rate_dth / (rate_dth + rate_outs)
+    val_dth[[k]] <- stats::rbinom(
+      n = 1L,
+      size = val_exit,
+      prob = prob_dth
+    )
+    val_outs[[k]] <- val_exit - val_dth[[k]]
+    ## apply demographic accounting equation to derive stock
+    val_stk[[k + 1L]] <- val_stk[[k]] - val_exit + val_ins[[k]]
+  }
+  ## generate births
+  if (is_new_cohort) {
+    val_bth <- rep(list(c(Female = NA_real_, Male = NA_real_)),
+      times = K
+    )
+  } else {
+    exposure <- 0.25 * (val_stk[-(K + 1L)] + val_stk[-1L])
+    val_bth_female <- with(
+      sysmod_bth,
+      stats::rnbinom(
+        n = K,
+        size = 1 / disp,
+        mu = mean * exposure
+      )
+    )
+    val_bth_male <- with(
+      sysmod_bth,
+      stats::rnbinom(
+        n = K,
+        size = 1 / disp,
+        mu = mean * exposure
+      )
+    )
+    val_bth <- lapply(
+      1:K,
+      function(k) {
+        c(
+          Female = val_bth_female[k],
+          Male = val_bth_male[k]
+        )
+      }
+    )
+  }
+  ## return results
+  list(
+    val_stk = val_stk, ## K + 1L
+    val_bth = val_bth, ## K
+    val_dth = val_dth, ## K
+    val_ins = val_ins, ## K
+    val_outs = val_outs ## K
+  )
+}
+
+#' Simulate system model arguments for function 'estimate_account'
 #'
 #' Designed for testing, not for use by end-users.
 #'
-#' @param n_age Number of age groups
-#' @param n_time Number of periods
-#' @param base_year First year for which events dataa is available
-#' @param disp_rates Overdispersion for rates
-#' @param scale_sd Parameter from data models
-#' @param datamod_popn Whether to include a data model for population
-#' @param datamod_ins Whether to include a data model for ins
-#' @param datamod_outs Whether to include a data model for outs
+#' @param n_age Integer - Number of age groups
+#' @param n_time Integer - Number of periods
+#' @param base_year Integer - First year for which events data is available
+#' @param disp_rates Double - Overdispersion for rates
 #'
-#' @returns A named list with elements 'sysmods' and 'datamods'
+#' @return A named list with elements 'sysmods'
 #'
 #' @noRd
-sim_args_estimate <- function(n_age = 3L,
-                              n_time = 3L,
-                              base_year = 2010L,
-                              disp_rates = 0.1,
-                              scale_sd = 0,
-                              datamod_popn = TRUE,
-                              datamod_ins = TRUE,
-                              datamod_outs = TRUE) {
-  ## classification variables -----------------------------------------------
+sim_arg_system_models <- function(n_age = 3L,
+                                  n_time = 3L,
+                                  base_year = 2010L,
+                                  disp_rates = 0.1) {
+  if (n_age < 2L) {
+    stop("'n_age' is less than 2")
+  }
+
+  classif_vars_events_nocohort <- sim_classif_vars_events(
+    n_age = n_age,
+    n_time = n_time,
+    has_cohort = FALSE,
+    base_year = base_year
+  )
+
+  mean_births <- classif_vars_events_nocohort[classif_vars_events_nocohort$age > 0L, ]
+  mean_births$mean <- stats::runif(n = nrow(mean_births), max = 0.2)
+  sysmod_births <- sysmod(
+    mean = mean_births,
+    disp = disp_rates,
+    nm_series = "births"
+  )
+
+  mean_deaths <- classif_vars_events_nocohort
+  mean_deaths$mean <- stats::runif(n = nrow(mean_deaths), max = 0.02)
+  sysmod_deaths <- sysmod(
+    mean = mean_deaths,
+    disp = disp_rates,
+    nm_series = "deaths"
+  )
+
+  mean_ins <- classif_vars_events_nocohort
+  mean_ins$mean <- stats::runif(n = nrow(mean_ins), max = 50)
+  sysmod_ins <- sysmod(
+    mean = mean_ins,
+    disp = disp_rates,
+    nm_series = "ins"
+  )
+
+  mean_outs <- classif_vars_events_nocohort
+  mean_outs$mean <- stats::runif(n = nrow(mean_outs), max = 0.02)
+  sysmod_outs <- sysmod(
+    mean = mean_outs,
+    disp = disp_rates,
+    nm_series = "outs"
+  )
+
+  sysmods <- list(
+    sysmod_births,
+    sysmod_deaths,
+    sysmod_ins,
+    sysmod_outs
+  )
+}
+
+
+#' Simulate data model arguments for function 'estimate_account'
+#'
+#' Designed for testing, not for use by end-users.
+#' @param n_age Integer - Number of age groups
+#' @param n_time Integer - Number of periods
+#' @param base_year Integer - First year for which events data is available
+#' @param scale_sd Double - Parameter from data models
+#' @param datamod_popn Logical - Whether to include a data model for population
+#' @param datamod_ins Logical - Whether to include a data model for ins
+#' @param datamod_outs Logical - Whether to include a data model for outs
+#'
+#' @return A named list of 'datamods'
+#'
+#' @noRd
+sim_arg_data_models <- function(n_age = 3L,
+                                n_time = 3L,
+                                base_year = 2010L,
+                                scale_sd = 0,
+                                datamod_popn = TRUE,
+                                datamod_ins = TRUE,
+                                datamod_outs = TRUE) {
   if (n_age < 2L) {
     stop("'n_age' is less than 2")
   }
@@ -43,49 +247,8 @@ sim_args_estimate <- function(n_age = 3L,
     n_time = n_time,
     base_year = base_year
   )
-  ## system models ----------------------------------------------------------
-  ## sysmod - births
-  mean_births <- classif_vars_events_nocohort[classif_vars_events_nocohort$age > 0L, ]
-  mean_births$mean <- stats::runif(n = nrow(mean_births), max = 0.2)
-  sysmod_births <- sysmod(
-    mean = mean_births,
-    disp = disp_rates,
-    nm_series = "births"
-  )
-  ## sysmod - deaths
-  mean_deaths <- classif_vars_events_nocohort
-  mean_deaths$mean <- stats::runif(n = nrow(mean_deaths), max = 0.02)
-  sysmod_deaths <- sysmod(
-    mean = mean_deaths,
-    disp = disp_rates,
-    nm_series = "deaths"
-  )
-  ## sysmod - ins
-  mean_ins <- classif_vars_events_nocohort
-  mean_ins$mean <- stats::runif(n = nrow(mean_ins), max = 50)
-  sysmod_ins <- sysmod(
-    mean = mean_ins,
-    disp = disp_rates,
-    nm_series = "ins"
-  )
-  ## sysmod - outs
-  mean_outs <- classif_vars_events_nocohort
-  mean_outs$mean <- stats::runif(n = nrow(mean_outs), max = 0.02)
-  sysmod_outs <- sysmod(
-    mean = mean_outs,
-    disp = disp_rates,
-    nm_series = "outs"
-  )
-  ## combine
-  sysmods <- list(
-    sysmod_births,
-    sysmod_deaths,
-    sysmod_ins,
-    sysmod_outs
-  )
-  ## data models ------------------------------------------------------------
+
   datamods <- list()
-  ## datamod - popn
   if (datamod_popn) {
     data_popn <- classif_vars_popn
     data_popn$count <- stats::runif(n = nrow(data_popn), min = 950, max = 1050)
@@ -99,17 +262,17 @@ sim_args_estimate <- function(n_age = 3L,
     )
     datamods <- c(datamods, list(datamod_popn))
   }
-  ## datamod - births
+
   data_births <- classif_vars_events_withcohort[classif_vars_events_withcohort$age > 0L, ]
   data_births$count <- stats::rpois(n = nrow(data_births), lambda = 50)
   datamod_births <- datamod_exact(data = data_births, nm_series = "births")
   datamods <- c(datamods, list(datamod_births))
-  ## datamod - deaths
+
   data_deaths <- classif_vars_events_withcohort
   data_deaths$count <- stats::rpois(n = nrow(data_deaths), lambda = 10)
   datamod_deaths <- datamod_exact(data = data_deaths, nm_series = "deaths")
   datamods <- c(datamods, list(datamod_deaths))
-  ## datamod - ins
+
   if (datamod_ins) {
     data_ins <- classif_vars_events_withcohort
     data_ins$count <- stats::rpois(n = nrow(data_ins), lambda = 50)
@@ -123,7 +286,7 @@ sim_args_estimate <- function(n_age = 3L,
     )
     datamods <- c(datamods, list(datamod_ins))
   }
-  ## datamod - outs
+
   if (datamod_outs) {
     data_outs <- classif_vars_events_withcohort
     data_outs$count <- stats::runif(n = nrow(data_outs), max = 20)
@@ -137,11 +300,7 @@ sim_args_estimate <- function(n_age = 3L,
     )
     datamods <- c(datamods, list(datamod_outs))
   }
-  ## combine and return -----------------------------------------------------
-  list(
-    sysmods = sysmods,
-    datamods = datamods
-  )
+  datamods
 }
 
 
@@ -334,7 +493,7 @@ sim_comod <- function(K = 20,
     time = time_age$time,
     age = time_age$age
   )
-  count_bthdth$val_bth <- vals$val_bth ## list
+  count_bthdth$val_bth <- vals$val_bth ## list - NB val_bth itself is a list
   ## datasets
   if (is_new_cohort) {
     val <- vals$val_stk[-1L]
@@ -398,4 +557,59 @@ sim_comod <- function(K = 20,
     datamods_ins = list(dataset_ins = datamod_ins),
     datamods_outs = list(dataset_outs = datamod_outs)
   )
+}
+
+
+## HAS_TESTS
+#' Simulate time and age variables
+#' for a cohort
+#'
+#' @param K Number of triangles
+#' @param is_new_cohort Whether cohort born during
+#' estimation period
+#'
+#' @returns A data frame with variables
+#' 'time' and 'age'
+#'
+#' @noRd
+sim_time_age <- function(K, cohort, is_new_cohort) {
+  if (is_new_cohort) {
+    s_time <- seq.int(from = cohort, length.out = (K + 1L) / 2L)
+    time <- rep(s_time, each = 2L)[2L:(K + 1L)]
+    triangle <- rep(0:1, times = ceiling((K + 1L) / 2L))[1L:K]
+  } else {
+    age_start <- 30L
+    s_time <- seq.int(
+      from = cohort + age_start + 1L,
+      length.out = (K + 1L) / 2L
+    )
+    time <- rep(s_time, each = 2L)[1L:K]
+    triangle <- rep(0:1, times = ceiling((K + 1L) / 2L))[2L:(K + 1L)]
+  }
+  age <- time - cohort - triangle
+  data.frame(
+    time = time,
+    age = age
+  )
+}
+
+
+## HAS_TESTS
+#' Halve a number, and then if the result is not
+#' a whole number, randomly round to whole number
+#'
+#' @param x Number to halve
+#'
+#' @returns A integerish double
+#'
+#' @noRd
+whole_num_halve <- function(x) {
+  ans <- x / 2
+  remainder <- ans - floor(ans)
+  if (isTRUE(all.equal(remainder, 0))) {
+    ans
+  } else {
+    add <- stats::rbinom(n = 1L, size = 1L, prob = remainder)
+    floor(ans) + add
+  }
 }

@@ -80,7 +80,7 @@ get_idx_const_all <- function(mods) {
 
 ## HAS_TESTS
 #' Get factor to be used to distinguish
-#' datasets in combined data
+#' datasets in combined data prior estimation by TMB
 #'
 #' @param mods A list of data models
 #'
@@ -99,7 +99,7 @@ get_idx_data_all <- function(mods) {
 
 ## HAS_TESTS
 #' Get factor to be used to distinguish
-#' parameters estimated by TMB
+#' parameters prior to being estimated by TMB
 #'
 #' @param mods A list of data models
 #'
@@ -134,21 +134,9 @@ get_is_obs_all <- function(mods) {
   }
 }
 
-## get_nm_series_all <- function(mods) {
-##     if (length(mods) > 0L) {
-##         par <- lapply(mods, get_par)
-##         n <- lengths(par)
-##         nm_series <- vapply(mods,
-##         ans <- lapply(mods, get_is_obs)
-##         unlist(ans, use.names = FALSE)
-##     }
-##     else
-##         integer()
-## }
-
 
 ## HAS_TESTS
-#' Get combined parameters estimated by
+#' Get combined parameters prior to being estimated by
 #' TMB from all cohort data models
 #'
 #' @param mods A list of data models.
@@ -167,7 +155,7 @@ get_par_all <- function(mods) {
 
 
 ## HAS_TESTS
-#' Get combined parameters estimated by
+#' Get transformed data models prior to being estimated by
 #' TMB from all cohort data models
 #'
 #' @param mods A list of data models.

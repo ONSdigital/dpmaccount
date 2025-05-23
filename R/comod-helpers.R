@@ -30,13 +30,15 @@
 #' @param what Component(s) to extract.
 #' @param n_draw Number of draws from posterior distribution.
 #' Defaults to 1000.
+#' @param seed_list list of seeds produced by make_seed_account()
 #'
 #' @returns Named list of tibbles.
 #'
 #' @noRd
 components_cohort <- function(object,
                               what = "population",
-                              n_draw = 1000L) {
+                              n_draw = 1000L,
+                              seed_list) {
   choices <- c(
     "population",
     "events",
@@ -60,7 +62,8 @@ components_cohort <- function(object,
   )
   what <- unique(what)
   account <- components_cohort_account(object,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_list = seed_list
   )
   ans <- list()
   if ("population" %in% what) {
@@ -75,7 +78,8 @@ components_cohort <- function(object,
   if ("rates" %in% what) {
     rates <- components_cohort_rates(object,
       account = account,
-      n_draw = n_draw
+      n_draw = n_draw,
+      seed_list = seed_list
     )
     ans <- c(ans, list(rates = rates))
   }
@@ -87,7 +91,8 @@ components_cohort <- function(object,
     datamods <- components_cohort_datamods(
       object = object,
       population = account[["population"]],
-      events = account[["events"]]
+      events = account[["events"]],
+      seed_list = seed_list
     )
     ans <- c(ans, list(datamods = datamods))
   }
@@ -115,13 +120,14 @@ components_cohort <- function(object,
 #' "dpmaccount_comod"
 #' @param n_draw Number of draws from
 #' posterior distribution
+#' @param seed_list list of seeds produced by make_seed_account()
 #'
 #' @returns A named list with tibbles
 #' 'population', 'events', and 'exposure',
 #' and scalar 'propn_adjusted'.
 #'
 #' @noRd
-components_cohort_account <- function(object, n_draw) {
+components_cohort_account <- function(object, n_draw, seed_list) {
   cohort <- object$cohort
   sex <- object$sex
   is_new_cohort <- object$is_new_cohort
@@ -149,7 +155,8 @@ components_cohort_account <- function(object, n_draw) {
     stk_init = stk_init,
     val_dth = count_bthdth$val_dth,
     cohort = cohort,
-    sex = sex
+    sex = sex,
+    seed_in = seed_list$draw_counts_seed
   )
   val_stk_init <- counts$val_stk_init
   val_stk <- counts$val_stk
@@ -294,7 +301,7 @@ components_cohort_data <- function(object) {
 #' @returns A tibble.
 #'
 #' @noRd
-components_cohort_datamods <- function(object, population, events) {
+components_cohort_datamods <- function(object, population, events, seed_list) {
   datamods_stk <- object$datamods_stk
   datamods_ins <- object$datamods_ins
   datamods_outs <- object$datamods_outs
@@ -317,7 +324,8 @@ components_cohort_datamods <- function(object, population, events) {
     value <- draw_par_datamods(
       object = object,
       population = population,
-      events = events
+      events = events,
+      seed_in = seed_list$draw_par_datamods_seed
     )
     value <- matrix_to_list_rows(value)
     ans <- rbind(labels_popn, labels_ins, labels_outs)
@@ -352,12 +360,13 @@ components_cohort_datamods <- function(object, population, events) {
 #' 'ins', and 'outs'
 #'
 #' @noRd
-components_cohort_rates <- function(object, account, n_draw) {
+components_cohort_rates <- function(object, account, n_draw, seed_list) {
   deaths <- draw_rates(
     sysmod = object$sysmod_dth,
     events = account$events$deaths,
     exposure = account$exposure$exposure,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_in = seed_list$draw_rates_dth_seed
   )
   is_at_risk_bth <- is_at_risk_bth(object)
   if (is_at_risk_bth) {
@@ -366,7 +375,8 @@ components_cohort_rates <- function(object, account, n_draw) {
       sysmod = object$sysmod_bth,
       events = events_bth,
       exposure = account$exposure$exposure,
-      n_draw = n_draw
+      n_draw = n_draw,
+      seed_in = seed_list$draw_rates_bth_seed
     )
   } else {
     births <- rep.int(list(rep(NA_real_, times = n_draw)),
@@ -377,13 +387,15 @@ components_cohort_rates <- function(object, account, n_draw) {
     sysmod = object$sysmod_ins,
     events = account$events$ins,
     exposure = NULL,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_in = seed_list$draw_rates_ins_seed
   )
   outs <- draw_rates(
     sysmod = object$sysmod_outs,
     events = account$events$outs,
     exposure = account$exposure$exposure,
-    n_draw = n_draw
+    n_draw = n_draw,
+    seed_in = seed_list$draw_rates_outs_seed
   )
   ans <- tibble::tibble(
     time = object$count_bthdth$time,

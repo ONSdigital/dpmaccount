@@ -3,7 +3,7 @@
 \docType{data}
 \name{gl_cover_sd_emig}
 \alias{gl_cover_sd_emig}
-\title{Standard error for coverage ratios from simulated coverage survey
+\title{Standard deviation for coverage ratios from simulated coverage survey
 for Greenland emigration data}
 \format{
 A data frame with columns
@@ -13,7 +13,7 @@ A data frame with columns
 gl_cover_sd_emig
 }
 \description{
-Standard error for coverage ratios from simulated coverage survey
+Standard deviation for coverage ratios from simulated coverage survey
 for Greenland emigration data
 }
 \seealso{

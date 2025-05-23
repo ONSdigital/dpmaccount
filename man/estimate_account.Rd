@@ -4,7 +4,12 @@
 \alias{estimate_account}
 \title{Estimate a demographic account}
 \usage{
-estimate_account(sysmods, datamods = list(), keep_adfun = FALSE)
+estimate_account(
+  sysmods,
+  datamods = list(),
+  keep_adfun = FALSE,
+  seed_in = NULL
+)
 }
 \arguments{
 \item{sysmods}{List of system models
@@ -19,6 +24,8 @@ and outward movements.}
 \item{keep_adfun}{Whether to keep the functions
 created internally by \code{TMB::MakeADFun()}.
 For expert use only. Defaults to \code{FALSE}.}
+
+\item{seed_in}{Integer seed used to generate account seeding. Defaults to NULL to generate a random seeding.}
 }
 \value{
 An object of class \code{"dpmaccount_results"}.

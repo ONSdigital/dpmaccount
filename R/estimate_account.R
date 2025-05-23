@@ -28,6 +28,7 @@
 #' @param keep_adfun Whether to keep the functions
 #' created internally by `TMB::MakeADFun()`.
 #' For expert use only. Defaults to `FALSE`.
+#' @param seed_in Integer seed used to generate account seeding. Defaults to NULL to generate a random seeding.
 #'
 #' @returns An object of class `"dpmaccount_results"`.
 #'
@@ -121,7 +122,8 @@
 #' @export
 estimate_account <- function(sysmods,
                              datamods = list(),
-                             keep_adfun = FALSE) {
+                             keep_adfun = FALSE,
+                             seed_in = NULL) {
   ## check inputs
   check_sysmods(sysmods)
   check_datamods(datamods)
@@ -163,6 +165,8 @@ estimate_account <- function(sysmods,
   comod <- .mapply(new_comod, dots = df, MoreArgs = list())
   ## fit models
   fitted <- lapply(comod, fit, keep_adfun = keep_adfun)
+  # draw seeds
+  seed_list <- make_seed_account(seed_in = seed_in)
   ## return results
   if (keep_adfun) {
     adfun <- lapply(fitted, function(x) x$adfun)
@@ -174,13 +178,15 @@ estimate_account <- function(sysmods,
       cohort = df$cohort,
       sex = df$sex,
       fitted = fitted,
-      adfun = adfun
+      adfun = adfun,
+      seed_list = seed_list
     )
   } else {
     new_dpmaccount_results(
       cohort = df$cohort,
       sex = df$sex,
-      fitted = fitted
+      fitted = fitted,
+      seed_list = seed_list
     )
   }
 }

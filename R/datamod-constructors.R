@@ -84,6 +84,11 @@ datamod_exact <- function(data,
     nm_df = "data",
     is_popn = FALSE
   )
+  check_no_na(
+    df = data,
+    nm_x = "count",
+    nm_df = "data"
+  )
   data <- tibble::tibble(data)
   new_datamod_exact(
     data = data,
@@ -91,7 +96,6 @@ datamod_exact <- function(data,
     nm_data = nm_data
   )
 }
-
 
 ## HAS_TESTS
 #' Create object of class "dpmaccount_datamod_exact"
@@ -135,7 +139,7 @@ new_datamod_exact <- function(data, nm_series, nm_data) {
 #' - \eqn{y_i} is the observed count for cell \eqn{i}
 #' - \eqn{\rho_i} is the net coverage ratio for cell \eqn{i}
 #' - \eqn{x_i} is the true count for cell \eqn{i}, and
-#' - \eqn{\sigma_i} is the standard devation for cell \eqn{i}.
+#' - \eqn{\sigma_i} is the standard deviation for cell \eqn{i}.
 #'
 #' When `scale_ratio` and `scale_sd` are
 #' greater than `0`,
@@ -149,10 +153,10 @@ new_datamod_exact <- function(data, nm_series, nm_data) {
 #'
 #' - \eqn{c_i} is the cohort associated with cell \eqn{i},
 #' - \eqn{\alpha_c} is multiplier applied to the coverage
-#'   ratio for cohort $c$,
+#'   ratio for cohort \eqn{c},
 #' - \eqn{\beta_c} is multiplier applied to the standard deviation
-#'   for cohort $c$,
-#' - \eqn{A_{\alpha}} is `scale_sd`, and
+#'   for cohort \eqn{c},
+#' - \eqn{A_{\alpha}} is `scale_ratio`, and
 #' - \eqn{A_{\beta}} is `scale_sd`.
 #'
 #' In the extended model, \eqn{\alpha_c}
@@ -428,6 +432,8 @@ new_datamod_norm <- function(data,
 #' [t distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution#Location-scale_t-distribution)
 #' with location and scale parameters
 #'
+#' When `scale_ratio` is zero (the default) the data model is
+#'
 #' \deqn{y_i \sim t(\nu, \rho_i x_i, s_i^2)}
 #'
 #' where
@@ -439,7 +445,38 @@ new_datamod_norm <- function(data,
 #' - \eqn{x_i} is the true count for cell \eqn{i}, and
 #' - \eqn{s_i} is the scale for cell \eqn{i}.
 #'
-#' @inheritSection datamod_norm data
+#' When `scale_ratio` is greater than zero the data model becomes
+#'
+#'  \deqn{y_i \sim t(\nu, e^{\alpha_{c_i}} \rho_i x_i, s_i^2)}
+#'  \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
+#'
+#' - \eqn{c_i} is the cohort associated with cell \eqn{i},
+#' - \eqn{\alpha_c} is multiplier applied to the coverage
+#'   ratio for cohort \eqn{c}
+#'
+#' In the extended model, \eqn{\alpha_c}
+#' is treated as unknown, and is estimated
+#' when [estimate_account()] is called.
+#'
+#' @section data:
+#'
+#' `data` is a data frame holding reported counts. It must always
+#' have the following variables:
+#' - `age` Non-negative whole numbers, starting at 0.
+#' - `sex` Character or factor. Must include the level `"Female"`.
+#' - `time` Whole numbers. Typically years, but can be
+#' quarters or months.
+#' - `count` Non-negative numbers, not necessarily integer.
+#'
+#' If the data being modelled describe ins or outs,
+#' then `data` must also include a variable
+#' called `cohort`, which uses the same units as `time`.
+#' If the data being modelled describe population,
+#' then `data` must not have a variable called cohort.
+#'
+#' If a combination of classifying variables is missing from
+#' `data`, then `datamod_t` assumes that the corresponding
+#' value for `count` is `NA` (not `0`).
 #'
 #' @section df:
 #'
@@ -472,6 +509,18 @@ new_datamod_norm <- function(data,
 #' All values for the `scale` variable must be positive
 #' (ie greater than zero).
 #'
+#' @section scale_ratio:
+#'
+#' Specifying a non-zero value for `scale_ratio` adds
+#' flexibility to the data model.
+#' A non-zero value for `scale_ratio` implies that we
+#' may have systematically under-estimated or overestimated
+#' coverage ratios.
+#' Setting `scale_ratio` to `0.1`, for instance, implies that
+#' the coverage ratios implied by `ratio` could consistently
+#' understate or overstate coverage ratios, by 10 percent
+#' or even 20-30 percent.
+#'
 #' @inheritSection datamod_norm nm_data
 #'
 #' @inheritSection datamod_norm nm_series
@@ -486,12 +535,25 @@ new_datamod_norm <- function(data,
 #' @return An object of class `"dpmaccount_datamod_t"`.
 #'
 #' @examples
+#' ## No bias in coverage ratio - scale_ratio = 0
 #' reg_popn <- dpmaccount::gl_report_popn
 #' scale <- dpmaccount::gl_cover_sd_popn
 #' names(scale)[match("sd", names(scale))] <- "scale"
 #' datamod_t(
 #'   data = reg_popn,
 #'   scale = scale,
+#'   scale_ratio = 0,
+#'   nm_series = "population"
+#' )
+#'
+#' ## non-zero scale ratio
+#' #' reg_popn <- dpmaccount::gl_report_popn
+#' scale <- dpmaccount::gl_cover_sd_popn
+#' names(scale)[match("sd", names(scale))] <- "scale"
+#' datamod_t(
+#'   data = reg_popn,
+#'   scale = scale,
+#'   scale_ratio = 0.1,
 #'   nm_series = "population"
 #' )
 #'
@@ -500,6 +562,7 @@ datamod_t <- function(data,
                       df = 4,
                       ratio = 1,
                       scale,
+                      scale_ratio = 0,
                       nm_series,
                       nm_data = NULL) {
   if (is.null(nm_data)) {
@@ -517,6 +580,11 @@ datamod_t <- function(data,
     df = data,
     nm_df = "data",
     is_popn = is_popn
+  )
+  check_scale(
+    x = scale_ratio,
+    x_arg = "scale_ratio",
+    zero_ok = TRUE
   )
   check_df(df)
   df <- as.double(df)
@@ -570,6 +638,7 @@ datamod_t <- function(data,
     df = df,
     ratio = ratio,
     scale = scale,
+    scale_ratio = scale_ratio,
     nm_series = nm_series,
     nm_data = nm_data
   )
@@ -586,16 +655,18 @@ datamod_t <- function(data,
 #' @param ratio A single non-negative number
 #' or a data frame
 #' @param scale A data frame
+#' @param scale_ratio A non-negative number
 #' @param nm_series A string
 #' @param nm_data A string
 #'
-#' @returns An object of class "dpmaccount_datamod_binom"
+#' @returns An object of class "dpmaccount_datamod_t"
 #'
 #' @noRd
 new_datamod_t <- function(data,
                           df,
                           ratio,
                           scale,
+                          scale_ratio,
                           nm_series,
                           nm_data) {
   ans <- list(
@@ -603,9 +674,495 @@ new_datamod_t <- function(data,
     df = df,
     ratio = ratio,
     scale = scale,
+    scale_ratio = scale_ratio,
     nm_series = nm_series,
     nm_data = nm_data
   )
   class(ans) <- c("dpmaccount_datamod_t", "dpmaccount_datamod")
+  ans
+}
+
+
+## Negative binomial ----------------------------------------------------------
+
+## HAS_TESTS
+#' Specify a data model based on a negative binomial distribution
+#'
+#' Create a data model where the relationship between the
+#' reported and true population counts is represented by a negative
+#' binomial distribution. In this model, the negative binomial
+#' is given a mean-dispersion parameterisation. (For a discussion
+#' of the mean-disperion parameterisation, see, for instance,
+#' \href{https://en.wikipedia.org/wiki/Negative_binomial_distribution}{wikipedia}
+#' or \href{https://mc-stan.org/docs/2_20/functions-reference/nbalt.html}{stan docs}).
+#'
+#' Let \eqn{y} be the reported count and \eqn{x} the true count.
+#' Let \eqn{r} and \eqn{d} be ratio and dispersion parameters.
+#' Let \eqn{v = 1/d}. When \eqn{d > 0}, the probability mass function
+#' is (when `scale_ratio` takes the default value of zero)
+#' \deqn{
+#' Pr(Y=y) = \Gamma(v + y) / (y! \Gamma(v))
+#'     (v / (v + r x))^v
+#'     ((r x) / (v + r x))^y
+#' }
+#' When \eqn{d=0}, the distribution reduces to the Poisson distribution,
+#' so that the probability mass function is
+#' \deqn{
+#' Pr(Y=y) = (1/(y!)) e^(-rx) (rx)^y
+#' }
+#'
+#' When `scale_ratio` is greater than zero the data model becomes
+#' \deqn{
+#' Pr(Y=y) = \Gamma(v + ye^{\alpha_{c_i}}) / ((ye^{\alpha_{c_i}})! \Gamma(v))
+#'     (v / (v + r x))^v
+#'     ((r x) / (v + r x))^(ye^{\alpha_{c_i}})
+#' }
+#'  \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
+#'
+#' - \eqn{c_i} is the cohort associated with cell \eqn{i},
+#' - \eqn{\alpha_c} is multiplier applied to the coverage
+#'   ratio for cohort \eqn{c}
+#'
+#' In the extended model, \eqn{\alpha_c}
+#' is treated as unknown, and is estimated
+#' when [estimate_account()] is called.
+#'
+#' @section data:
+#'
+#' `data` is a data frame holding reported counts. It must always
+#' have the following variables:
+#' - `age` Non-negative whole numbers, starting at 0.
+#' - `sex` Character or factor. Must include the level `"Female"`.
+#' - `time` Whole numbers. Typically years, but can be
+#' quarters or months.
+#' - `count` Non-negative numbers, not necessarily integer.
+#'
+#' If the data being modelled describe ins or outs,
+#' then `data` must also include a variable
+#' called `cohort`, which uses the same units as `time`.
+#' If the data being modelled describe population,
+#' then `data` must not have a variable called cohort.
+#'
+#' If a combination of classifying variables is missing from
+#' `data`, then `datamod_nbinom` assumes that the corresponding
+#' value for `count` is `NA` (not `0`).
+#'
+#' @inheritSection datamod_norm ratio
+#'
+#' @inheritSection datamod_norm nm_data
+#'
+#' @inheritSection datamod_norm nm_series
+#'
+#' @section disp:
+#' The \code{disp} argument governs dispersion, ie variability.
+#' When \code{disp} equals 0, variance in the reported
+#' count equals the expected value for the reported count.
+#' When \code{disp} is greater than 0, variance in the reported
+#' count is greater than the expected value. In general,
+#' the less reliable the data source is,
+#' the higher \code{disp} should be.
+#'
+#' The \code{disp} argument can be a single number,
+#' or can be a data frame with some or all of
+#' same variables as \code{data},
+#' except for \code{"count"},
+#' which is replaced by a \code{"disp"}.
+#'
+#' @section scale_ratio:
+#'
+#' Specifying a non-zero value for `scale_ratio` adds
+#' flexibility to the data model.
+#' A non-zero value for `scale_ratio` implies that we
+#' may have systematically under-estimated or overestimated
+#' coverage ratios.
+#' Setting `scale_ratio` to `0.1`, for instance, implies that
+#' the coverage ratios implied by `ratio` could consistently
+#' understate or overstate coverage ratios, by 10 percent
+#' or even 20-30 percent.
+#'
+#' @param data A data frame
+#' @param ratio A single number, or a data frame. (Default is 1.).
+#' @param disp A single number, or a data frame with a variable called \code{"disp"}. (Default is 1.)
+#' @param scale_ratio A non-negative number. (Default is 0).
+#' @param nm_data Name of the dataset.
+#' @param nm_series Name of the demographic series that the data refers to.
+#'
+#' @return An object of class \code{"datamod_nbinom"}.
+#'
+#' @examples
+#' ## A constant coverage ratio (of 90%)
+#' ## across all categories,
+#' ## but higher dispersion for young males,
+#' ## than for other groups
+#' reg_popn <- dpmaccount::gl_report_popn
+#' disp <- within(reg_popn, {
+#'   rm(count)
+#'   disp <- ifelse(sex == "Male" & age %in% 20:29, 0.01, 0.05)
+#' })
+#' varying_disp_dm <- datamod_nbinom(
+#'   data = reg_popn,
+#'   ratio = 0.9,
+#'   disp = disp,
+#'   nm_series = "population"
+#' )
+#' varying_disp_dm
+#'
+#' #' ## A constant but likely biased coverage ratio (of 90%)
+#' ## across all categories,
+#' ## but higher dispersion for young males,
+#' ## than for other groups
+#' reg_popn <- dpmaccount::gl_report_popn
+#' disp <- within(reg_popn, {
+#'   rm(count)
+#'   disp <- ifelse(sex == "Male" & age %in% 20:29, 0.01, 0.05)
+#' })
+#' varying_disp_dm <- datamod_nbinom(
+#'   data = reg_popn,
+#'   ratio = 0.9,
+#'   disp = disp,
+#'   scale_ratio = 0.1,
+#'   nm_series = "population"
+#' )
+#' varying_disp_dm
+#'
+#' @export
+datamod_nbinom <- function(data,
+                           ratio = 1,
+                           disp = 1,
+                           scale_ratio = 0,
+                           nm_series,
+                           nm_data = NULL) {
+  if (is.null(nm_data)) {
+    nm_data <- deparse1(substitute(data))
+  } else {
+    checkmate::assert_string(nm_data,
+      min.chars = 1L
+    )
+  }
+  check_nm_data_clash(nm_data)
+  nm_series <- check_and_tidy_nm_series(nm_series)
+  check_is_not_bth_dth(nm_series)
+  is_popn <- identical(nm_series, "population")
+  check_scale(
+    x = scale_ratio,
+    x_arg = "scale_ratio",
+    zero_ok = TRUE
+  )
+  check_df_data(
+    df = data,
+    nm_df = "data",
+    is_popn = is_popn
+  )
+  if (is.numeric(ratio)) {
+    checkmate::assert_number(ratio,
+      lower = 0,
+      finite = TRUE
+    )
+  } else if (is.data.frame(ratio)) {
+    check_df_dataconst(
+      df = ratio,
+      nm_df = "ratio",
+      nm_measure_var = "ratio",
+      data = data,
+      is_popn = is_popn
+    )
+  } else {
+    stop(
+      gettextf(
+        "'%s' has class \"%s\"",
+        "ratio",
+        class(ratio)
+      ),
+      call. = FALSE
+    )
+  }
+  if (is.numeric(disp)) {
+    checkmate::assert_number(disp,
+      lower = 0,
+      finite = TRUE
+    )
+  } else if (is.data.frame(disp)) {
+    check_df_dataconst(
+      df = disp,
+      nm_df = "disp",
+      nm_measure_var = "disp",
+      data = data,
+      is_popn = is_popn
+    )
+  } else {
+    stop(
+      gettextf(
+        "'%s' has class \"%s\"",
+        "disp",
+        class(disp)
+      ),
+      call. = FALSE
+    )
+  }
+
+  classif_vars <- data[-match("count", names(data))]
+  if (is.numeric(ratio)) {
+    ratio <- rep(ratio, times = nrow(classif_vars))
+    ratio <- data.frame(classif_vars, ratio)
+  } else {
+    ratio <- merge(classif_vars, ratio, all.x = TRUE)
+  }
+  if (is.numeric(disp)) {
+    disp <- rep(disp, times = nrow(classif_vars))
+    disp <- data.frame(classif_vars, disp)
+  } else {
+    disp <- merge(classif_vars, disp, all.x = TRUE)
+  }
+  if (is_popn) {
+    data$cohort <- with(data, time - age)
+  }
+  data <- tibble::tibble(data)
+  new_datamod_nbinom(
+    data = data,
+    ratio = ratio,
+    disp = disp,
+    scale_ratio = scale_ratio,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+}
+
+## HAS_TESTS
+#' Create object of class "dpmaccount_datamod_nbinom"
+#'
+#' Assume inputs all checked and correct
+#'
+#' @param data A data frame
+#' @param ratio A single non-negative number, or a data frame
+#' @param disp A single non-negative number number, or a data frame with a variable called \code{"disp"}
+#' @param scale_ratio A non-negative number
+#' @param nm_series A string
+#' @param nm_data A string
+#'
+#' @returns An object of class "dpmaccount_datamod_nbinom"
+#'
+#' @noRd
+new_datamod_nbinom <- function(data,
+                               ratio = 1,
+                               disp = 1,
+                               scale_ratio = 0,
+                               nm_series,
+                               nm_data = NULL) {
+  ans <- list(
+    data = data,
+    ratio = ratio,
+    disp = disp,
+    scale_ratio = scale_ratio,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans) <- c("dpmaccount_datamod_nbinom", "dpmaccount_datamod")
+  ans
+}
+
+## Poisson ----------------------------------------------------------
+
+## HAS_TESTS
+#' Specify a data model based on a Poisson distribution
+#'
+#' Create a data model where the relationship between the
+#' reported and true population counts is represented by a Poisson distribution.
+#'
+#' #' When `scale_ratio` takes the default value of zero, the Poisson distribution
+#' has probability mass function
+#' \deqn{
+#' Pr(X=k) = (1/(k!)) e^(-\lambda) (\lambda)^k
+#' } and density
+#' \deqn{
+#' p(x|\lambda) = \lambda^x exp(-\lambda)/x!
+#' } with mean and variance E(X) = Var(X) = \eqn{\lambda}.
+#'
+#'
+#' When `scale_ratio` is greater than zero the data model becomes
+#' \deqn{
+#' p(x|\lambda) = \lambda^x exp(-\lambda)/x!
+#' }
+#'  \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
+#'
+#' - \eqn{c_i} is the cohort associated with cell \eqn{i},
+#' - \eqn{\alpha_c} is multiplier applied to the coverage
+#'   ratio for cohort \eqn{c}
+#'
+#' In the extended model, \eqn{\alpha_c}
+#' is treated as unknown, and is estimated
+#' when [estimate_account()] is called.
+#'
+#' @section data:
+#'
+#' `data` is a data frame holding reported counts. It must always
+#' have the following variables:
+#' - `age` Non-negative whole numbers, starting at 0.
+#' - `sex` Character or factor. Must include the level `"Female"`.
+#' - `time` Whole numbers. Typically years, but can be
+#' quarters or months.
+#' - `count` Non-negative numbers, not necessarily integer.
+#'
+#' If the data being modelled describe ins or outs,
+#' then `data` must also include a variable
+#' called `cohort`, which uses the same units as `time`.
+#' If the data being modelled describe population,
+#' then `data` must not have a variable called cohort.
+#'
+#' If a combination of classifying variables is missing from
+#' `data`, then `datamod_poisson` assumes that the corresponding
+#' value for `count` is `NA` (not `0`).
+#'
+#' @inheritSection datamod_norm ratio
+#'
+#' @section scale_ratio:
+#'
+#' Specifying a non-zero value for `scale_ratio` adds
+#' flexibility to the data model.
+#' A non-zero value for `scale_ratio` implies that we
+#' may have systematically under-estimated or overestimated
+#' coverage ratios.
+#' Setting `scale_ratio` to `0.1`, for instance, implies that
+#' the coverage ratios implied by `ratio` could consistently
+#' understate or overstate coverage ratios, by 10 percent
+#' or even 20-30 percent.
+#'
+#' @inheritSection datamod_norm nm_data
+#'
+#' @inheritSection datamod_norm nm_series
+#'
+#'
+#' @param data A data frame
+#' @param ratio A single number, or a data frame. (Default is 1.).
+#' @param scale_ratio A non-negative number. (Default is 0).
+#' @param nm_data Name of the dataset.
+#' @param nm_series Name of the demographic series that the data refers to.
+#'
+#' @return An object of class \code{"datamod_poisson"}.
+#'
+#' @examples
+#' ## A constant coverage ratio (of 90%)
+#' ## across all categories,
+#' ## but higher mean rate for young males,
+#' ## than for other group
+#' reg_popn <- dpmaccount::gl_report_popn
+#' poisson_dm <- datamod_poisson(
+#'   data = reg_popn,
+#'   ratio = 0.9,
+#'   nm_series = "population"
+#' )
+#' poisson_dm
+#'
+#' ## A constant but likely biased coverage ratio (of 90%)
+#' ## across all categories,
+#' ## but higher mean rate for young males,
+#' ## than for other group
+#' reg_popn <- dpmaccount::gl_report_popn
+#' poisson_dm <- datamod_poisson(
+#'   data = reg_popn,
+#'   ratio = 0.9,
+#'   scale_ratio = 0.1,
+#'   nm_series = "population"
+#' )
+#' poisson_dm
+#'
+#' @export
+datamod_poisson <- function(data,
+                            ratio = 1,
+                            scale_ratio = 0,
+                            nm_series,
+                            nm_data = NULL) {
+  if (is.null(nm_data)) {
+    nm_data <- deparse1(substitute(data))
+  } else {
+    checkmate::assert_string(nm_data,
+      min.chars = 1L
+    )
+  }
+  check_nm_data_clash(nm_data)
+  nm_series <- check_and_tidy_nm_series(nm_series)
+  check_is_not_bth_dth(nm_series)
+  is_popn <- identical(nm_series, "population")
+  check_scale(
+    x = scale_ratio,
+    x_arg = "scale_ratio",
+    zero_ok = TRUE
+  )
+  check_df_data(
+    df = data,
+    nm_df = "data",
+    is_popn = is_popn
+  )
+
+  if (is.numeric(ratio)) {
+    checkmate::assert_number(ratio,
+      lower = 0,
+      finite = TRUE
+    )
+  } else if (is.data.frame(ratio)) {
+    check_df_dataconst(
+      df = ratio,
+      nm_df = "ratio",
+      nm_measure_var = "ratio",
+      data = data,
+      is_popn = is_popn
+    )
+  } else {
+    stop(
+      gettextf(
+        "'%s' has class \"%s\"",
+        "ratio",
+        class(ratio)
+      ),
+      call. = FALSE
+    )
+  }
+
+  classif_vars <- data[-match("count", names(data))]
+  if (is.numeric(ratio)) {
+    ratio <- rep(ratio, times = nrow(classif_vars))
+    ratio <- data.frame(classif_vars, ratio)
+  } else {
+    ratio <- merge(classif_vars, ratio, all.x = TRUE)
+  }
+  if (is_popn) {
+    data$cohort <- with(data, time - age)
+  }
+  data <- tibble::tibble(data)
+  new_datamod_poisson(
+    data = data,
+    ratio = ratio,
+    scale_ratio = scale_ratio,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+}
+
+## HAS_TESTS
+#' Create object of class "dpmaccount_datamod_poisson"
+#'
+#' Assume inputs all checked and correct
+#'
+#' @param data A data frame
+#' @param ratio A single non-negative number, or a data frame
+#' @param scale_ratio A non-negative number
+#' @param nm_series A string
+#' @param nm_data A string
+#'
+#' @returns An object of class "dpmaccount_datamod_poisson"
+#'
+#' @noRd
+new_datamod_poisson <- function(data,
+                                ratio = 1,
+                                scale_ratio = 0,
+                                nm_series,
+                                nm_data = NULL) {
+  ans <- list(
+    data = data,
+    ratio = ratio,
+    scale_ratio = scale_ratio,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans) <- c("dpmaccount_datamod_poisson", "dpmaccount_datamod")
   ans
 }

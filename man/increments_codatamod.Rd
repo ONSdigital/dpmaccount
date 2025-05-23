@@ -19,5 +19,5 @@ increments_codatamod(x, cohort, nm_data, is_stock)
 A tibble
 }
 \description{
-Calculate increments within Lexis triangles
+Take time and age information and calculates corresponding cohort and Lexis triangle indexing
 }

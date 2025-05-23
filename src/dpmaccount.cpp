@@ -53,6 +53,44 @@ Type logpost_nopar_t(vector<Type> data,
 }
 
 template <class Type>
+Type logpost_nopar_nbinom(vector<Type> data,
+                          vector<Type> val,
+                          vector<int> is_obs,
+                          vector<Type> consts) {
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  vector<Type> disp = consts.segment(n, n);
+  Type ans = 0;
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      Type x = data[i];
+      Type mu = (ratio[i] * val[i]);
+      Type var = mu + ((mu * mu) * disp[i]);
+      ans += dnbinom2(x, mu, var, true);
+    }
+  }
+  return ans;
+}
+
+template <class Type>
+Type logpost_nopar_poisson(vector<Type> data,
+                          vector<Type> val,
+                          vector<int> is_obs,
+                          vector<Type> consts) {
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  Type ans = 0;
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      Type x = data[i];
+      Type lambda = (ratio[i] * val[i]);
+      ans += dpois(x, lambda, true);
+    }
+  }
+  return ans;
+}
+
+template <class Type>
 Type logpost_nopar(vector<Type> data,
 		   vector<Type> val,
 		   vector<int> is_obs,
@@ -65,6 +103,12 @@ Type logpost_nopar(vector<Type> data,
     break;
   case 2:
     ans = logpost_nopar_t(data, val, is_obs, consts);
+    break;
+  case 3:
+    ans = logpost_nopar_nbinom(data, val, is_obs, consts);
+    break;
+  case 4:
+    ans = logpost_nopar_poisson(data, val, is_obs, consts);
     break;
   default:
     error("function 'logpost_nopar' cannot handle i_mod = %d", i_mod);
@@ -117,6 +161,102 @@ Type logpost_par_norm(vector<Type> data,
   return ans;
 }
 
+template <class Type>
+Type logpost_par_t(vector<Type> data,
+                      vector<Type> val,
+                      vector<int> is_obs,
+                      vector<Type> par,
+                      vector<Type> consts) {
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  vector<Type> scale = consts.segment(n, n);
+  Type df = consts[2 * n];
+  Type scale_mult_ratio = consts[2 * n + 1];
+  bool has_mult_ratio = scale_mult_ratio > 0;
+  Type mult_ratio;
+  if (has_mult_ratio ) {
+    mult_ratio = par[0];
+  }
+  else{
+    mult_ratio = 0;
+  }
+  Type exp_mult_ratio = exp(mult_ratio);
+  Type ans = 0;
+  if (has_mult_ratio)
+    ans += dnorm(mult_ratio, Type(0), scale_mult_ratio, true);
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      // Note use of 'location-scale' version of t-distribution and necessary addition of Jacobian (log(scale))
+      Type x = (data[i] - exp_mult_ratio * ratio[i] * val[i]) / scale[i];
+      ans += dt(x, df, true) - log(scale[i]);
+    }
+  }
+  return ans;
+}
+
+template <class Type>
+Type logpost_par_nbinom(vector<Type> data,
+                   vector<Type> val,
+                   vector<int> is_obs,
+                   vector<Type> par,
+                   vector<Type> consts) {
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  vector<Type> disp = consts.segment(n, n);
+  Type scale_mult_ratio = consts[2 * n];
+  bool has_mult_ratio = scale_mult_ratio > 0;
+  Type mult_ratio;
+  if (has_mult_ratio ) {
+    mult_ratio = par[0];
+  }
+  else{
+    mult_ratio = 0;
+  }
+  Type exp_mult_ratio = exp(mult_ratio);
+  Type ans = 0;
+  if (has_mult_ratio)
+    ans += dnorm(mult_ratio, Type(0), scale_mult_ratio, true);
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      Type x = data[i];
+      Type mu = (exp_mult_ratio * ratio[i] * val[i]);
+      Type var = mu + ((mu * mu) * disp[i]);
+      ans += dnbinom2(x, mu, var, true);
+    }
+  }
+  return ans;
+}
+
+template <class Type>
+Type logpost_par_poisson(vector<Type> data,
+                        vector<Type> val,
+                        vector<int> is_obs,
+                        vector<Type> par,
+                        vector<Type> consts) {
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  Type scale_mult_ratio = consts[n];
+  bool has_mult_ratio = scale_mult_ratio > 0;
+  Type mult_ratio;
+  if (has_mult_ratio ) {
+    mult_ratio = par[0];
+  }
+  else{
+    mult_ratio = 0;
+  }
+  Type exp_mult_ratio = exp(mult_ratio);
+  Type ans = 0;
+  if (has_mult_ratio)
+    ans += dnorm(mult_ratio, Type(0), scale_mult_ratio, true);
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      Type x = data[i];
+      Type lambda = (exp_mult_ratio * ratio[i] * val[i]);
+      ans += dpois(x, lambda, true);
+    }
+  }
+  return ans;
+}
 
 template <class Type>
 Type logpost_haspar(vector<Type> data,
@@ -129,6 +269,15 @@ Type logpost_haspar(vector<Type> data,
   switch(i_mod) {
   case 101:
     ans = logpost_par_norm(data, val, is_obs, par, consts);
+    break;
+  case 201:
+    ans = logpost_par_t(data, val, is_obs, par, consts);
+    break;
+  case 301:
+    ans = logpost_par_nbinom(data, val, is_obs, par, consts);
+    break;
+  case 401:
+    ans = logpost_par_poisson(data, val, is_obs, par, consts);
     break;
   default:
     error("function 'logpost_haspar' cannot handle i_mod = %d", i_mod);

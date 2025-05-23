@@ -338,7 +338,8 @@ summary.dpmaccount_comod <- function(object, ...) {
       mean <- object$mean
       estimates <- summarise_estimated_means(
         mean = mean,
-        prior_stk_init = prior_stk_init
+        prior_stk_init = prior_stk_init,
+        dths = count_bthdth$val_dth
       )
       account <- data.frame(deaths[c("time", "age")],
         estimates["mean_stk_end"],

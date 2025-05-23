@@ -180,12 +180,13 @@ datamods <- list(
 )
 ```
 
-Once the system and data models are specified, estimation is straightforward:
-
+Once the system and data models are specified, estimation is straightforward.
+For reproducibility, we also set a seed. Seeds are stored in the results object and so, if required, must be set at this stage.
 ```{r estimate_account}
 results <- estimate_account(
   sysmods = sysmods,
-  datamods = datamods
+  datamods = datamods,
+  seed = 0
 )
 ```
 
@@ -193,11 +194,6 @@ The output from `estimate_account()` is held in an object of class `"dpmaccount_
 
 ```{r results}
 results
-```
-
-The outputs consist of random draws. For reproducibility, we set the random seed.
-```{r set_seed}
-set.seed(0)
 ```
 
 Calling `summary()` on the results object produces an account with total counts and rates.

@@ -282,6 +282,7 @@ augment_rates <- function(object,
     nm_disp <- paste0(nm, ".disp")
     mean <- sysmods[[nm_mean]]
     disp <- sysmods[[nm_disp]]
+    set.seed(seed = object$seed_list$prior_rate_seed)
     prior[[nm_rate]] <- .mapply(draw_prior_rate,
       dots = list(
         mean = mean,

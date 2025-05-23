@@ -59,7 +59,7 @@ test_that("'new_codatamod_norm' works with valid inputs - scale_sd is non-zero",
 
 ## 'new_codatamod_t' ----------------------------------------------------------
 
-test_that("'new_codatamod_norm' works with valid inputs", {
+test_that("'new_codatamod_t' works with valid inputs, scale_ratio equal 0", {
   args <- data.frame(
     data = as.double(1:10),
     age = rep(0:4, each = 2),
@@ -67,13 +67,97 @@ test_that("'new_codatamod_norm' works with valid inputs", {
     is_obs = rep(1L, 10),
     df = rep(4, 10),
     ratio = rep(1, 10),
-    scale = rep(0.25, 10)
+    scale = rep(0.25, 10),
+    scale_ratio = 0
   )
   ans <- new_codatamod_t(args)
+  expect_s3_class(ans, "dpmaccount_codatamod_t_nopar")
   expect_s3_class(ans, "dpmaccount_codatamod_t")
   expect_s3_class(ans, "dpmaccount_codatamod")
 })
 
+test_that("'new_codatamod_t' works with valid inputs, scale_ratio non-zero", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    df = rep(4, 10),
+    ratio = rep(1, 10),
+    scale = rep(0.25, 10),
+    scale_ratio = 0.2
+  )
+  ans <- new_codatamod_t(args)
+  expect_s3_class(ans, "dpmaccount_codatamod_t_haspar")
+  expect_s3_class(ans, "dpmaccount_codatamod_t")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
+
+## 'new_codatamod_nbinom' ----------------------------------------------------------
+
+test_that("'new_codatamod_nbinom' works with valid inputs, scale_ratio equal 0", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    disp = rep(0.1, 10),
+    scale_ratio = 0
+  )
+  ans <- new_codatamod_nbinom(args)
+  expect_s3_class(ans, "dpmaccount_codatamod_nbinom_nopar")
+  expect_s3_class(ans, "dpmaccount_codatamod_nbinom")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
+
+test_that("'new_codatamod_nbinom' works with valid inputs, scale_ratio non-zero", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    disp = rep(0.1, 10),
+    scale_ratio = 0.2
+  )
+  ans <- new_codatamod_nbinom(args)
+  expect_s3_class(ans, "dpmaccount_codatamod_nbinom_haspar")
+  expect_s3_class(ans, "dpmaccount_codatamod_nbinom")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
+
+## 'new_codatamod_poisson' ----------------------------------------------------------
+
+test_that("'new_codatamod_poisson' works with valid inputs, scale_ratio equal 0", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    scale_ratio = 0
+  )
+  ans <- new_codatamod_poisson(args)
+  expect_s3_class(ans, "dpmaccount_codatamod_poisson_nopar")
+  expect_s3_class(ans, "dpmaccount_codatamod_poisson")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
+
+test_that("'new_codatamod_poisson' works with valid inputs, scale_ratio non-zero", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    scale_ratio = 0.2
+  )
+  ans <- new_codatamod_poisson(args)
+  expect_s3_class(ans, "dpmaccount_codatamod_poisson_haspar")
+  expect_s3_class(ans, "dpmaccount_codatamod_poisson")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
 
 ## 'validate_codatamod' --------------------------------------------------
 
@@ -155,7 +239,8 @@ test_that("'validate_codatamod_t' works with valid inputs", {
     is_obs = rep(1L, 10),
     df = rep(4, 10),
     ratio = rep(1, 10),
-    scale = rep(0.25, 10)
+    scale = rep(0.25, 10),
+    scale_ratio = 0
   )
   x <- new_codatamod_t(args)
   expect_identical(validate_codatamod_t(x), x)
@@ -169,11 +254,78 @@ test_that("'validate_codatamod_t' throws expected error when 'scale' is NA", {
     is_obs = rep(1L, 10),
     df = rep(4, 10),
     ratio = rep(1, 10),
-    scale = c(rep(0.25, 9), NA)
+    scale = c(rep(0.25, 9), NA),
+    scale_ratio = 0
   )
   x <- new_codatamod_t(args)
   expect_error(
     validate_codatamod_t(x),
     "element 10 of 'scale' is NA \\(and element 10 of 'data' is not\\)"
+  )
+})
+
+
+
+## 'validate_codatamod_nbinom' ---------------------------------------------
+
+test_that("'validate_codatamod_nbinom' works with valid inputs", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    disp = rep(0.1, 10),
+    scale_ratio = 0
+  )
+  x <- new_codatamod_nbinom(args)
+  expect_identical(validate_codatamod_nbinom(x), x)
+})
+
+test_that("'validate_codatamod_nbinom' throws expected error when 'disp' is NA", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    disp = c(rep(0.1, 9), NA),
+    scale_ratio = 0
+  )
+  x <- new_codatamod_nbinom(args)
+  expect_error(
+    validate_codatamod_nbinom(x),
+    "element 10 of 'disp' is NA \\(and element 10 of 'data' is not\\)"
+  )
+})
+
+## 'validate_codatamod_poisson' ---------------------------------------------
+
+test_that("'validate_codatamod_poisson' works with valid inputs", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    scale_ratio = 0
+  )
+  x <- new_codatamod_poisson(args)
+  expect_identical(validate_codatamod_poisson(x), x)
+})
+
+test_that("'validate_codatamod_poisson' throws expected error when 'ratio' is NA", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = c(rep(0.1, 9), NA),
+    scale_ratio = 0
+  )
+  x <- new_codatamod_poisson(args)
+  expect_error(
+    validate_codatamod_poisson(x),
+    "element 10 of 'ratio' is NA \\(and element 10 of 'data' is not\\)"
   )
 })

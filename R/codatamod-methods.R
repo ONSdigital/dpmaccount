@@ -31,14 +31,44 @@ get_const.dpmaccount_codatamod_norm_nopar <- function(x) {
 
 ## HAS_TESTS
 #' @export
-get_const.dpmaccount_codatamod_t <- function(x) {
+get_const.dpmaccount_codatamod_t_haspar <- function(x) {
+  c(x$ratio, x$scale, x$df, x$scale_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_t_nopar <- function(x) {
   c(x$ratio, x$scale, x$df)
+}
+
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_nbinom_haspar <- function(x) {
+  c(x$ratio, x$disp, x$scale_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_nbinom_nopar <- function(x) {
+  c(x$ratio, x$disp)
+}
+
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_poisson_haspar <- function(x) {
+  c(x$ratio, x$scale_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_poisson_nopar <- function(x) {
+  c(x$ratio)
 }
 
 
 ## 'get_data' -----------------------------------------------------------------
 
-#' Get reported values
+#' Get observed data values supplied through data models
 #'
 #' @param x An object of class 'dpmaccount_codatamod'
 #'
@@ -88,6 +118,23 @@ get_data_cols.dpmaccount_codatamod_t <- function(x, nm) {
   ans
 }
 
+## HAS_TESTS
+#' @export
+get_data_cols.dpmaccount_codatamod_nbinom <- function(x, nm) {
+  ans <- x[c("time", "age", "data")]
+  ans <- tibble::as_tibble(ans)
+  names(ans)[[3L]] <- nm
+  ans
+}
+
+## HAS_TESTS
+#' @export
+get_data_cols.dpmaccount_codatamod_poisson <- function(x, nm) {
+  ans <- x[c("time", "age", "data")]
+  ans <- tibble::as_tibble(ans)
+  names(ans)[[3L]] <- nm
+  ans
+}
 
 ## 'get_has_par' --------------------------------------------------------------
 
@@ -117,7 +164,37 @@ get_has_par.dpmaccount_codatamod_norm_nopar <- function(x) {
 
 ## HAS_TESTS
 #' @export
-get_has_par.dpmaccount_codatamod_t <- function(x) {
+get_has_par.dpmaccount_codatamod_t_haspar <- function(x) {
+  TRUE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_t_nopar <- function(x) {
+  FALSE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_nbinom_haspar <- function(x) {
+  TRUE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_nbinom_nopar <- function(x) {
+  FALSE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_poisson_haspar <- function(x) {
+  TRUE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
   FALSE
 }
 
@@ -191,7 +268,40 @@ get_par.dpmaccount_codatamod_norm_nopar <- function(x) {
 
 ## HAS_TESTS
 #' @export
-get_par.dpmaccount_codatamod_t <- function(x) {
+get_par.dpmaccount_codatamod_t_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(0, times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_t_nopar <- function(x) {
+  double()
+}
+
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_nbinom_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(0, times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_nbinom_nopar <- function(x) {
+  double()
+}
+
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_poisson_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(0, times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
   double()
 }
 
@@ -232,7 +342,52 @@ get_nms_par.dpmaccount_codatamod_norm_nopar <- function(x) {
 
 ## HAS_TESTS
 #' @export
-get_nms_par.dpmaccount_codatamod_t <- function(x) {
+get_nms_par.dpmaccount_codatamod_t_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  ans <- character()
+  if (has_mult_ratio) {
+    ans <- c(ans, "mult_ratio")
+  }
+  ans
+}
+
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_t_nopar <- function(x) {
+  character()
+}
+
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_nbinom_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  ans <- character()
+  if (has_mult_ratio) {
+    ans <- c(ans, "mult_ratio")
+  }
+  ans
+}
+
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_nbinom_nopar <- function(x) {
+  character()
+}
+
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_poisson_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  ans <- character()
+  if (has_mult_ratio) {
+    ans <- c(ans, "mult_ratio")
+  }
+  ans
+}
+
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
   character()
 }
 
@@ -265,14 +420,48 @@ get_transform_datamod.dpmaccount_codatamod_norm_nopar <- function(x) {
 
 ## HAS_TESTS
 #' @export
-get_transform_datamod.dpmaccount_codatamod_t <- function(x) {
+get_transform_datamod.dpmaccount_codatamod_t_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(list(identity), times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_t_nopar <- function(x) {
   list()
 }
 
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_nbinom_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(list(identity), times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_nbinom_nopar <- function(x) {
+  list()
+}
+
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_poisson_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(list(identity), times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_poisson_nopar <- function(x) {
+  list()
+}
 
 ## 'increments_codatamod' -----------------------------------------------------
 
 #' Calculate increments within Lexis triangles
+#'
+#' Take time and age information and calculates corresponding cohort and Lexis triangle indexing
 #'
 #' @param x Object of class "dpmaccount_codatamod"
 #' @param cohort Numeric - cohort that data refers to
@@ -369,8 +558,38 @@ make_str.dpmaccount_codatamod_norm_nopar <- function(x, nm_data, nm_series) {
 
 ## HAS_TESTS
 #' @export
-make_str.dpmaccount_codatamod_t <- function(x, nm_data, nm_series) {
+make_str.dpmaccount_codatamod_t_haspar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ t(df, exp(alpha) * ratio * %s, scale^2)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_t_nopar <- function(x, nm_data, nm_series) {
   sprintf("%12s ~ t(df, ratio * %s, scale^2)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_nbinom_haspar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ nbinom(exp(alpha) * ratio * %s, disp)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_nbinom_nopar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ nbinom(ratio * %s, disp)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_poisson_haspar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ poisson(exp(alpha) * ratio * %s)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_poisson_nopar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ poisson(ratio * %s)\n", nm_data, nm_series)
 }
 
 
@@ -412,7 +631,7 @@ print.dpmaccount_codatamod_norm_nopar <- function(x, ...) {
 
 
 #' @export
-print.dpmaccount_codatamod_t <- function(x, ...) {
+print.dpmaccount_codatamod_t_haspar <- function(x, ...) {
   df <- data.frame(
     data = x$data,
     is_obs = x$is_obs,
@@ -422,8 +641,163 @@ print.dpmaccount_codatamod_t <- function(x, ...) {
     time = x$time,
     age = x$age
   )
-  cat("t-distribution cohort data model : An object of class \"dpmaccount_codatamod_t\"\n\n")
+  cat("t-distribution cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n\n")
+  cat("scale_ratio:", x$scale_ratio, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+#' @export
+print.dpmaccount_codatamod_t_nopar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    df = x$df,
+    ratio = x$ratio,
+    scale = x$scale,
+    time = x$time,
+    age = x$age
+  )
+  cat("t-distribution cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
   cat("i_mod:", x$i_mod, "\n\n")
   print(df)
   invisible(x)
+}
+
+#' @export
+print.dpmaccount_codatamod_nbinom_haspar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    ratio = x$ratio,
+    disp = x$disp,
+    time = x$time,
+    age = x$age
+  )
+  cat("Negative-binomial-distribution cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n\n")
+  cat("scale_ratio:", x$scale_ratio, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+#' @export
+print.dpmaccount_codatamod_nbinom_nopar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    ratio = x$ratio,
+    disp = x$disp,
+    time = x$time,
+    age = x$age
+  )
+  cat("Negative-binomial-distribution cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+#' @export
+print.dpmaccount_codatamod_poisson_haspar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    ratio = x$ratio,
+    time = x$time,
+    age = x$age
+  )
+  cat("Poisson-distribution cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n\n")
+  cat("scale_ratio:", x$scale_ratio, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+#' @export
+print.dpmaccount_codatamod_poisson_nopar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    ratio = x$ratio,
+    time = x$time,
+    age = x$age
+  )
+  cat("Poisson-distribution cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+
+
+## 'rgen' -------------------------------------------------------------------
+
+#' Generate draws from the data model
+#'
+#' @param x An object of class 'dpmaccount_codatamod'
+#'
+#' @returns An object of class 'dpmaccount_codatamod'
+#'
+#' @noRd
+rgen <- function(x) {
+  UseMethod("rgen")
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_norm_haspar <- function(x) {
+  # check that this is the right interpretation of the data model
+  alpha_c <- stats::rnorm(length(x$data), mean = 0, sd = x$scale_ratio) # α_c \sim \mathcal{N}(0, A_{α}^2)
+  beta_c <- stats::rnorm(length(x$data), mean = 0, sd = x$scale_sd) #  β_c \sim \mathcal{N}(0, A_{β}^2)
+  gen_sd <- exp(beta_c) * x$sd
+  gen_mean <- exp(alpha_c) * x$ratio * x$data
+  new_data <- stats::rnorm(length(x$data), mean = gen_mean, sd = gen_sd) # y_i \sim \mathcal{N}(e^{α_{c_i}} ρ_i x_i, (e^{β_{c_i}} σ_i)^2)
+  new_data <- ifelse(new_data > 0, new_data, 0)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_norm_nopar <- function(x) {
+  new_data <- stats::rnorm(length(x$data), mean = x$ratio * x$data, sd = x$sd)
+  new_data <- ifelse(new_data > 0, new_data, 0)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_t_haspar <- function(x) {
+  alpha_c <- stats::rnorm(length(x$data), mean = 0, sd = x$scale_ratio) # α_c \sim \mathcal{N}(0, A_{α}^2)
+  new_data <- stats::rt(length(x$data), df = x$df) * x$scale + x$data * x$ratio * exp(alpha_c)
+  new_data <- ifelse(new_data > 0, new_data, 0)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_t_nopar <- function(x) {
+  new_data <- stats::rt(length(x$data), df = x$df) * x$scale + x$data * x$ratio
+  new_data <- ifelse(new_data > 0, new_data, 0)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_nbinom <- function(x) {
+  new_data <- stats::rnbinom(length(x$data), mu = x$ratio * x$data, size = 1 / x$disp)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_poisson <- function(x) {
+  new_data <- stats::rpois(length(x$data), lambda = x$ratio * x$data)
+  x$data <- new_data
+  return(x)
 }

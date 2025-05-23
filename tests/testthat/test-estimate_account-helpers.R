@@ -25,6 +25,49 @@ test_that("'add_init_to_classif_vars' works with valid inputs", {
 })
 
 
+## 'get_best_value_multi' -----------------------------------------------------
+
+test_that("'get_best_value_multi' works with valid inputs", {
+  df1 <- expand.grid(age = 0:1, sex = c("Female", "Male"))
+  df2 <- expand.grid(age = 0:2, time = 2000:2001)
+  df3 <- expand.grid(age = 0:1, sex = c("Female", "Male"))
+  df4 <- expand.grid(age = 0:2, time = 2000:2001)
+  df1$val <- 1:4
+  df2$val <- 11:16
+  df3$val <- 21:24
+  df4$val <- 31:36
+  dfs <- list(df1, df2, df3, df4)
+  ans_obtained <- get_best_value_multi(dfs)
+  ans_expected <- suppressWarnings(
+    merge(
+      merge(merge(df1, df2, by = "age", all = TRUE),
+        df3,
+        by = c("age", "sex"), all = TRUE
+      ),
+      df4,
+      by = c("age", "time"), all = TRUE
+    )
+  )
+  ans_expected <- ans_expected[c("age", "time", "sex")]
+  ans_expected <- ans_expected[with(ans_expected, order(age, time, sex)), ]
+  ans_expected$value <- c(1L, 3L, 1L, 3L, 2L, 4L, 2L, 4L, 13L, 16L)
+  expect_identical(ans_obtained, ans_expected)
+})
+
+test_that("'get_best_value_multi' works with single data frame", {
+  df1 <- expand.grid(
+    age = 0:1, sex = c("Female", "Male"),
+    KEEP.OUT.ATTRS = FALSE
+  )
+  df1$val <- 1:4
+  dfs <- list(df1)
+  ans_obtained <- get_best_value_multi(dfs)
+  ans_expected <- df1
+  names(ans_expected)[[3]] <- "value"
+  expect_identical(ans_obtained, ans_expected)
+})
+
+
 ## 'make_classif_vars' --------------------------------------------------------
 
 test_that("'make_classif_vars' works with valid inputs", {
@@ -369,124 +412,45 @@ test_that("'make_cosysmods_df' works with valid inputs", {
   expect_identical(names(ans), c("cohort", "sex", "sysmod_ins", "sysmod_outs"))
 })
 
+## 'nest_to_list' -------------------------------------------------------------
 
-## 'make_map' -----------------------------------------------------------------
-
-test_that("'make_map' works with valid inputs - map is NULL", {
-  prior_stk_init <- list(mean = 3, sd = 1)
-  expect_identical(make_map(prior_stk_init), NULL)
-})
-
-test_that("'make_map' works with valid inputs - map is list", {
-  prior_stk_init <- list(mean = 3, sd = 0)
+test_that("'nest_to_list' works with valid inputs - data is atomic", {
+  df <- expand.grid(age = 0:2, sex = c("F", "M"), time = 2001:2005)
+  df$count <- seq_len(nrow(df))
+  ans <- nest_to_list(df,
+    nm_data = "count",
+    nm_id = "time",
+    nms_group = c("sex", "age"),
+    nm_value = "val"
+  )
+  expect_identical(names(ans), c("sex", "age", "val"))
   expect_identical(
-    make_map(prior_stk_init),
-    list(log_val_stk_init = factor(NA))
+    unname(sapply(ans, class)),
+    c("character", "integer", "list")
   )
+  ans_obtained <- ans$val[[1L]]
+  ans_expected <- df[df$age == 0 & df$sex == "F", "count"]
+  names(ans_expected) <- 2001:2005
+  expect_identical(ans_obtained, ans_expected)
 })
 
-
-## 'make_parameters' ----------------------------------------------------------
-
-test_that("'make_parameters' works with valid inputs", {
-  x <- sim_comod()
-  ans <- make_parameters(
-    mean_stk_init = x$prior_stk_init$mean,
-    sd_stk_init = x$prior_stk_init$sd,
-    val_dth <- x$count_bthdth$val_dth,
-    mean_ins = x$sysmod_ins$mean,
-    mean_outs = x$sysmod_outs$mean,
-    datamods_stk = x$datamods_stk,
-    datamods_ins = x$datamods_ins,
-    datamods_outs = x$datamods_outs
+test_that("'nest_to_list' works with valid inputs - data is list", {
+  df <- expand.grid(age = 0:2, sex = c("F", "M"), time = 2001:2005)
+  df$count <- as.list(seq_len(nrow(df)))
+  ans <- nest_to_list(df,
+    nm_data = "count",
+    nm_id = "time",
+    nms_group = c("sex", "age"),
+    nm_value = "val"
   )
-  expect_true(exp(ans$log_val_stk_init) > 0.001)
-  expect_true(all(ans$log_vals_ins >= 0.001))
-  expect_true(all(ans$log_vals_outs >= 0.001))
-  expect_true(all(exp(ans$log_val_stk_init)
-  + cumsum(exp(ans$log_val_ins))
-    - cumsum(exp(ans$log_val_outs))
-    - cumsum(val_dth) >= 0.001))
-})
-
-
-## 'make_vals_init' -----------------------------------------------------------
-
-test_that("'make_vals_init' works with valid inputs - stk_init fixed", {
-  K <- 10
-  sd_stk_init <- 0
-  for (seed in 1:10) {
-    set.seed(seed)
-    mean_stk_init <- runif(1, max = 10)
-    val_dth <- rpois(K, lambda = 2)
-    mean_ins <- runif(K, max = 5)
-    mean_outs <- runif(K, max = 1)
-    ans <- make_vals_init(
-      mean_stk_init = mean_stk_init,
-      sd_stk_init = sd_stk_init,
-      val_dth = val_dth,
-      mean_ins = mean_ins,
-      mean_outs = mean_outs
-    )
-    expect_true(all(exp(ans$log_val_stk_init)
-    + cumsum(exp(ans$log_val_ins))
-      - cumsum(exp(ans$log_val_outs))
-      - cumsum(val_dth) >= 0.000001))
-    expect_true(exp(ans$log_val_stk_init) >= 0.000001)
-    expect_true(all(exp(ans$log_val_ins) >= 0.000001))
-    expect_true(all(exp(ans$log_val_outs) >= 0.000001))
-  }
-})
-
-test_that("'make_vals_init' works with valid inputs - stk_init varying", {
-  K <- 10
-  for (seed in 1:10) {
-    set.seed(seed)
-    mean_stk_init <- runif(1, max = 10)
-    sd_stk_init <- 2
-    mean_ins <- runif(K, max = 5)
-    mean_outs <- runif(K, max = 1)
-    val_dth <- rpois(K, lambda = 2)
-    ans <- make_vals_init(
-      mean_stk_init = mean_stk_init,
-      sd_stk_init = sd_stk_init,
-      val_dth = val_dth,
-      mean_ins = mean_ins,
-      mean_outs = mean_outs
-    )
-    expect_true(all(exp(ans$log_val_stk_init)
-    + cumsum(exp(ans$log_val_ins))
-      - cumsum(exp(ans$log_val_outs))
-      - cumsum(val_dth) >= 0.000001))
-    expect_true(exp(ans$log_val_stk_init) >= 0.000001)
-    expect_true(all(exp(ans$log_val_ins) >= 0.000001))
-    expect_true(all(exp(ans$log_val_outs) >= 0.000001))
-  }
-})
-
-
-test_that("'make_vals_init' works with valid inputs - stk_init fixed and zero", {
-  K <- 10
-  sd_stk_init <- 0
-  for (seed in 1:10) {
-    set.seed(seed)
-    mean_stk_init <- 0
-    val_dth <- rpois(K, lambda = 2)
-    mean_ins <- runif(K, max = 5)
-    mean_outs <- runif(K, max = 1)
-    ans <- make_vals_init(
-      mean_stk_init = mean_stk_init,
-      sd_stk_init = sd_stk_init,
-      val_dth = val_dth,
-      mean_ins = mean_ins,
-      mean_outs = mean_outs
-    )
-    expect_true(all(exp(ans$log_val_stk_init)
-    + cumsum(exp(ans$log_val_ins))
-      - cumsum(exp(ans$log_val_outs))
-      - cumsum(val_dth) >= 0.000001))
-    expect_true(exp(ans$log_val_stk_init) >= 0.000001)
-    expect_true(all(exp(ans$log_val_ins) >= 0.000001))
-    expect_true(all(exp(ans$log_val_outs) >= 0.000001))
-  }
+  expect_identical(names(ans), c("sex", "age", "val"))
+  expect_identical(
+    unname(sapply(ans, class)),
+    c("character", "integer", "list")
+  )
+  ans_obtained <- ans$val[[1L]]
+  ans_expected <- df[df$age == 0 & df$sex == "F", "count"]
+  names(ans_expected) <- 2001:2005
+  expect_identical(ans_obtained, ans_expected)
+  expect_true(is.list(ans_obtained))
 })

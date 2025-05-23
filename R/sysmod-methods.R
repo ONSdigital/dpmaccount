@@ -59,7 +59,6 @@ make_cosysmod_df <- function(mod, classif_vars) {
   UseMethod("make_cosysmod_df")
 }
 
-
 ## HAS_TESTS
 #' @export
 make_cosysmod_df.dpmaccount_sysmod <- function(mod, classif_vars) {
@@ -88,7 +87,6 @@ make_cosysmod_df.dpmaccount_sysmod <- function(mod, classif_vars) {
   )
   ans
 }
-
 
 
 ## print ----------------------------------------------------------------------

@@ -52,7 +52,7 @@ where
 \item \eqn{y_i} is the observed count for cell \eqn{i}
 \item \eqn{\rho_i} is the net coverage ratio for cell \eqn{i}
 \item \eqn{x_i} is the true count for cell \eqn{i}, and
-\item \eqn{\sigma_i} is the standard devation for cell \eqn{i}.
+\item \eqn{\sigma_i} is the standard deviation for cell \eqn{i}.
 }
 
 When \code{scale_ratio} and \code{scale_sd} are
@@ -67,10 +67,10 @@ where
 \itemize{
 \item \eqn{c_i} is the cohort associated with cell \eqn{i},
 \item \eqn{\alpha_c} is multiplier applied to the coverage
-ratio for cohort $c$,
+ratio for cohort \eqn{c},
 \item \eqn{\beta_c} is multiplier applied to the standard deviation
-for cohort $c$,
-\item \eqn{A_{\alpha}} is \code{scale_sd}, and
+for cohort \eqn{c},
+\item \eqn{A_{\alpha}} is \code{scale_ratio}, and
 \item \eqn{A_{\beta}} is \code{scale_sd}.
 }
 
