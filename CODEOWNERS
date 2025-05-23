@@ -1,0 +1,5 @@
+# These owners are the current default owners for everything in
+# the dpmaccount repo. Unless a later match takes precedence,
+# @CompBioDan and @AwMbit and @tayloa1 will be requested for
+# review when someone opens a pull request.
+*       @CompBioDan @AwMbit @tayloa1

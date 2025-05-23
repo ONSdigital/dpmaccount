@@ -1,0 +1,328 @@
+---
+title: "Overview of dpmaccount"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Overview of dpmaccount}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteTangle{true}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 7,
+  fig.height = 7,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+In this vignette, we illustrate the main features of **dpmaccount**, using data from Statistics Greenland. (For more on the data, see the online help for the datasets used below.) We specify and estimate a model, and then inspect the results.
+
+First, however, we load the required packages.
+
+```{r setup}
+library(dpmaccount)
+library(dplyr, warn.conflicts = FALSE)
+library(tidyr)
+library(ggplot2)
+```
+
+
+# Specification
+
+We specify the 'system models' containing the underlying demographic rates and counts. The model for birth rates and counts has the form
+\begin{align}
+  x_{at} & \sim \text{Poisson}(\gamma^{\text{bth}} w_{at}) \\
+  \gamma_{at} & \sim \text{Gamma}(\delta^{-1}, (\delta \mu_{at})^{-1})
+\end{align}
+where $x_{at}$ is births to women of age $a$ during period $t$, $\gamma_{at}$ is the age-specific birth rate, and $w_{at}$ is exposure. We specify this model with
+```{r}
+sysmod_births <- sysmod(
+  mean = gl_sysmod_mean_births,
+  disp = 0.2,
+  nm_series = "births"
+)
+sysmod_births
+```
+The `mean` argument corresponds to $\mu_at$, and the `disp` argument correspondents to $\delta$. Although in this case we have specified a single value for `disp`, we can also specify different values for different subpopulations, by supplying a data frame.
+
+The models for deaths, ins, and outs are similar.
+
+```{r}
+sysmod_deaths <- sysmod(
+  mean = gl_sysmod_mean_deaths,
+  disp = 0.2,
+  nm_series = "deaths"
+)
+sysmod_ins <- sysmod(
+  mean = gl_sysmod_mean_immig,
+  disp = 0.2,
+  nm_series = "ins"
+)
+sysmod_outs <- sysmod(
+  mean = gl_sysmod_mean_emig,
+  disp = 0.2,
+  nm_series = "outs"
+)
+```
+
+We collect these models together into a named list
+
+```{r}
+sysmods <- list(
+  sysmod_births,
+  sysmod_deaths,
+  sysmod_ins,
+  sysmod_outs
+)
+```
+
+Next we specify data models describing the assumed relationship between reported counts for population, births, deaths, and migration, and the true underlying counts.  
+
+Births and deaths are a special case. We use an 'exact' data model, which tells **dpmaccount** that we are treating the births and deaths data as error-free.
+```{r}
+datamod_births <- datamod_exact(
+  data = gl_report_births,
+  nm_series = "births"
+)
+datamod_deaths <- datamod_exact(
+  data = gl_report_deaths,
+  nm_series = "deaths"
+)
+```
+
+For populations, ins, and outs, we use a 'normal' data models. In the case of population, the normal data model states that
+\begin{equation}
+  y_{ast} \sim \text{N}(r_{ast} x_{ast}, h_{ast}^2)
+\end{equation}
+where $y_{ast}$ is the reported population count, $x_{ast}$ is the true population count, $r_{ast}$ is the assumed coverage ratio, and $h_{ast}$ is an associated standard deviation (with smaller values for $h_{ast}$ implying higher quality data.)
+
+For the moment we assume that `r_{ast}` equals 1 for all $ast$, implying that the data are unbiased for all ages, sexes, and times. This is in fact the default setting for `datamod_norm` so we only have to supply `h_{ast}` and associated metadata, which we do as follows,
+```{r}
+datamod_popn <- datamod_norm(
+  data = gl_report_popn,
+  sd = gl_cover_sd_popn,
+  nm_series = "population"
+)
+datamod_popn
+```
+
+The data models for ins and outs are similar to the one for population,
+```{r}
+datamod_ins <- datamod_norm(
+  data = gl_report_immig,
+  sd = gl_cover_sd_immig,
+  nm_series = "ins"
+)
+datamod_outs <- datamod_norm(
+  data = gl_report_emig,
+  sd = gl_cover_sd_emig,
+  nm_series = "outs"
+)
+```
+
+We again collect the models into a named list.
+
+```{r}
+datamods <- list(
+  datamod_popn = datamod_popn,
+  datamod_births = datamod_births,
+  datamod_deaths = datamod_deaths,
+  datamod_ins = datamod_ins,
+  datamod_outs = datamod_outs
+)
+```
+
+# Estimation
+
+Once the system and data models are specified, estimation is straightforward:
+
+```{r}
+results <- estimate_account(
+  sysmods = sysmods,
+  datamods = datamods
+)
+```
+
+The output from `estimate_account()` is held in an object of class `"dpmaccount_results"`. 
+
+```{r}
+results
+```
+
+The outputs consist of random draws. For reproducibility, we set the random seed.
+```{r}
+set.seed(0)
+```
+
+Calling `summary()` on the results object produces an account with total counts and rates.
+
+```{r}
+summary(results)
+```
+
+Function `diagnositics()` provides information on the performance of the optimiser, and on any cohorts where the calculations failed.
+
+```{r}
+diagnostics(results)
+```
+
+# Extracting estimates
+
+The model object `results` contains all the information we need to generate estimates of counts and rates. Estimates can be obtained using the `dpmaccount_results` method for generic function `generics::components()`:
+
+```{r}
+components(results, what = "events")
+```
+
+However, for many purposes, the three `augment` functions
+
+- `augment_population()`
+- `augment_events()`
+- `augment_rates()`
+
+are more convenient. All three functions are variants on the generic function `generics::augment()`, which is part of the [tidymodels](https://www.tidymodels.org) framework. Augment functions contain the original dataset, augmented by columns with various types of estimate. 
+
+`augment_population()`, for instance, gives the original population data, combined with posterior draws for population counts (`population`), posterior means (`population.fitted`) and lower and upper limits for a 95% credible interval (`population.lower` and `population.upper`).
+
+```{r}
+res_population <- results %>%
+  augment_population()
+res_population
+```
+
+Having the raw data and the results together in the same data frame makes it easy to construct plots that compare data and results.
+
+```{r}
+ggplot(
+  res_population,
+  aes(
+    x = age,
+    ymin = population.lower,
+    y = population.fitted,
+    ymax = population.upper
+  )
+) +
+  facet_grid(vars(sex), vars(time)) +
+  geom_pointrange(
+    fatten = 0.2,
+    col = "darkorange"
+  ) +
+  geom_point(aes(y = gl_report_popn),
+    col = "darkblue",
+    size = 0.3
+  ) +
+  ylab("")
+```
+
+`components()`, `augment_population()`, `augment_events()`, and `augment_rates()` all have a `collapse` argument that can be used to collapse away age, sex, or cohort dimensions. To obtain population data and estimates classified only by sex and time, for instance, we use
+```{r}
+results %>%
+  augment_population(collapse = c("age", "cohort"))
+```
+
+
+Function `augment_rates()` returns a particularly rich set of results:
+
+- variables starting with `direct` are 'direct estimates' of rates, that is, estimates formed by dividing observed event counts by observed exposures
+- variables starting with `prior` describe prior distributions for rates, obtained by drawing from system models
+- variables starting with `post` describe posterior distributions for rates, obtained via TMB
+
+```{r}
+res_rates <- results %>%
+  augment_rates(collapse = c("cohort", "sex"))
+res_rates
+```
+
+To illustrate some of the possibilities, we show emigration rates for 2022,
+
+
+```{r}
+rates_emig <- res_rates %>%
+  filter(time == 2022) %>%
+  select(age, time,
+    direct = direct.gl_report_emig,
+    starts_with("prior.outs"),
+    starts_with("post.outs")
+  ) %>%
+  select(!where(is.list)) %>%
+  pivot_longer(
+    cols = c(starts_with("prior"), starts_with("post")),
+    names_to = c("series", "level"),
+    names_pattern = "(.*)\\.outs\\.(.*)"
+  ) %>%
+  pivot_wider(names_from = level)
+rates_emig
+```
+
+```{r, fig.width = 7, fig.height = 5}
+ggplot(rates_emig, aes(x = age)) +
+  geom_pointrange(
+    aes(
+      ymin = lower,
+      y = fitted,
+      ymax = upper,
+      color = series
+    ),
+    fatten = 0.2
+  ) +
+  scale_color_manual(values = c(
+    prior = "lightblue",
+    post = "darkblue"
+  )) +
+  geom_point(aes(y = direct),
+    col = "red",
+    size = 0.3
+  ) +
+  ylab("") +
+  theme(legend.position = "top")
+```
+
+And also immigration counts.
+
+
+
+```{r}
+rates_immig <- res_rates %>%
+  filter(time == 2022) %>%
+  select(age, time,
+    direct = direct.gl_report_immig,
+    starts_with("prior.ins"),
+    starts_with("post.ins")
+  ) %>%
+  select(!where(is.list)) %>%
+  pivot_longer(
+    cols = c(starts_with("prior"), starts_with("post")),
+    names_to = c("series", "level"),
+    names_pattern = "(.*)\\.ins\\.(.*)"
+  ) %>%
+  pivot_wider(names_from = level)
+rates_immig
+```
+
+
+```{r, fig.width = 7, fig.height = 5}
+ggplot(rates_immig, aes(x = age)) +
+  geom_pointrange(
+    aes(
+      ymin = lower,
+      y = fitted,
+      ymax = upper,
+      color = series
+    ),
+    fatten = 0.2
+  ) +
+  scale_color_manual(values = c(
+    prior = "lightblue",
+    post = "darkblue"
+  )) +
+  geom_point(aes(y = direct),
+    col = "red",
+    size = 0.3
+  ) +
+  ylab("") +
+  theme(legend.position = "top")
+```

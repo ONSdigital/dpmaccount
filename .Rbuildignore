@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^data-raw$
+^doc$
+^Meta$
+^README\.Rmd$
+^\.github$
+^CONTRIBUTING\.md$
+^CHANGELOG\.md$
+^CODE_OF_CONDUCT\.md$
+^CODEOWNERS$
