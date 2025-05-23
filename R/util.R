@@ -229,7 +229,7 @@ make_seed_account <- function(seed_in = NULL) {
   if (!is.null(seed_in)) {
     set.seed(seed_in)
   }
-  samp_vec <- sample.int(n = .Machine$integer.max, size = 7)
+  samp_vec <- sample.int(n = .Machine$integer.max, size = 9)
   seed_list <- list(
     prior_rate_seed = samp_vec[1],
     draw_counts_seed = samp_vec[2],
@@ -237,7 +237,31 @@ make_seed_account <- function(seed_in = NULL) {
     draw_rates_ins_seed = samp_vec[4],
     draw_rates_outs_seed = samp_vec[5],
     draw_rates_dth_seed = samp_vec[6],
-    draw_rates_bth_seed = samp_vec[7]
+    draw_rates_bth_seed = samp_vec[7],
+    post_pred_pop_seed = samp_vec[8],
+    post_pred_events_seed = samp_vec[9]
   )
   return(seed_list)
+}
+
+
+
+#' Convert the seed_list in an old (pre-v0.6.3) dpmaccount_results object
+#'
+#' Function to convert the seed_list in an old (pre-v0.6.3) dpmaccount_results
+#' object to work with v0.6.3-onwards components methods (augment_population,
+#' augment_events, augment_rates)
+#'
+#' @param res_obj A pre-v0.6.3 dpmaccount_results object
+#' @param seed_in Integer seed to set the seed for all the subsequent seeds
+#'
+#' @returns An dpmaccount_results object
+#'
+#' @noRd
+convert_old_dpmaccount_results <- function(res_obj, seed_in = NULL) {
+  if (!is.null(seed_in)) {
+    set.seed(seed_in)
+  }
+  res_obj$seed_list <- lapply(1:length(res_obj$cohort), function(x) make_seed_account())
+  return(res_obj)
 }

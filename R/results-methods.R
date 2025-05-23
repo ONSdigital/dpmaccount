@@ -186,13 +186,18 @@ components.dpmaccount_results <- function(object,
   if (add_expose_for_collapse) {
     what <- c(what, "exposure")
   }
+  if (length(seed_list) == 1) {
+    seed_list <- lapply(1:length(fitted), seed_list)
+  }
   ## extract components
-  results <- lapply(fitted,
-    components_cohort,
-    what = what,
-    n_draw = n_draw,
-    seed_list = seed_list
-  )
+  results <- lapply(1:length(fitted), function(x) {
+    components_cohort(
+      object = fitted[[x]],
+      what = what,
+      n_draw = n_draw,
+      seed_list = seed_list[[x]]
+    )
+  })
   ## join cohort-level results together as tibbles
   ans <- vector(mode = "list", length = length(what))
   names(ans) <- what
@@ -629,4 +634,293 @@ print.dpmaccount_results_summary <- function(x, ...) {
   cat("\n")
   ## return
   invisible(x)
+}
+
+
+## 'posterior predictive' ---------------------------------------------------------------
+
+## HAS TESTS
+#' Draw estimates for the posterior predictive distributions
+#'
+#'
+#' Argument `what` can take one or more of the
+#' following values:
+#' - `"population"` Estimated population counts.
+#' - `"events"` Estimated counts of births, deaths, ins, outs.
+#' system models for births, deaths, ins, outs.
+#'
+#' @section Aggregating classification variables:
+#'
+#' [estimate_account()] constructs estimates that
+#' are disaggregated by age, sex, cohort, and time.
+#'
+#' @param object the dpmaccount_results object
+#' @param n_draw numbers of draws to sample from the
+#' @param width width of the augment bounds
+#' @param what Component(s) to extract. Valid
+#' values are `"population"`, `"events"`
+#' @param na_rm Whether to replace `NA`s in result
+#' with `0`s. Default is `FALSE`.
+#' @param ... Not currently used.
+#'
+#' @returns
+#' A [tibble][tibble::tibble-package],
+#' or named list of tibbles.
+#'
+#' Tibbles include:
+#' - A list column with `n_draw` draws from the
+#' posterior predictive distribution.
+#' - Point estimates (means), marked `.fitted`.
+#' - Lower and upper limits of credible intervals
+#' specified by `width`, marked `.lower` and `.upper`.
+#' - dataset tilde
+#'
+#' @seealso
+#' - [augment_population()] Extract merged data and estimates for population.
+#' - [augment_events()] Extract merged data and estimates for events.
+#' - [augment_rates()] Extract merged priors and estimates for rates.
+#' - [diagnostics()] Extract measures of model performance.
+#'
+#' @examples
+#' ## use results from an existing model
+#' results <- dpmaccount::results_greenland
+#'
+#' ## posterior predictive
+#' post_pred(results, what = c("events", "population"), n_draw = 2)
+#'
+#' @export
+
+post_pred <- function(object,
+                      what = c("population", "events"),
+                      width = .95,
+                      n_draw = 1000,
+                      na_rm = FALSE, ...) {
+  UseMethod("post_pred")
+}
+
+#' @export
+post_pred.dpmaccount_results <- function(object,
+                                         what = c("population", "events"),
+                                         width = .95,
+                                         n_draw = 1000,
+                                         na_rm = FALSE,
+                                         ...) {
+  choices_what <- c(
+    "population",
+    "events"
+  )
+  uses_popn <- c(
+    "population",
+    "events"
+  )
+  cohort <- object$cohort
+  sex <- object$sex
+  fitted <- object$fitted
+  seed_list <- object$seed_list
+
+
+  checkmate::assert_subset(what,
+    choices = choices_what,
+    empty.ok = FALSE
+  )
+  n_draw <- checkmate::assert_count(n_draw,
+    positive = TRUE,
+    coerce = TRUE
+  )
+  # create components
+  results_comp <- lapply(fitted,
+    components_cohort,
+    what = what,
+    n_draw = n_draw,
+    seed_list = seed_list,
+    only_obs = FALSE
+  )
+
+  fitted_holder <- fitted
+
+  if ("population" %in% what) {
+    set.seed(seed_list$post_pred_pop_seed)
+    post_pred_population <- lapply(results_comp, function(x) x$population)
+    message("Drawing posterior predictive for population")
+    pb <- txtProgressBar(
+      min = 0,
+      max = length(fitted_holder),
+      style = 3,
+      width = 50,
+      char = "="
+    )
+    for (i in 1:length(fitted_holder)) {
+      for (mod in 1:length(fitted_holder[[i]]$datamods_stk)) {
+        select_pops <- post_pred_population[[i]]$population
+        is_obs <- fitted_holder[[i]]$datamods_stk[[mod]]$is_obs
+        data_tilde_mat <- matrix(nrow = length(is_obs), ncol = n_draw)
+        for (j in 1:n_draw) {
+          j_pops <- lapply(select_pops, function(x) x[j]) |> unlist()
+          fitted_holder[[i]]$datamods_stk[[mod]]$data[which(is_obs == 1)] <- j_pops[which(is_obs == 1)]
+          suppressWarnings(fitted_holder[[i]]$datamods_stk[[mod]] <- rgen(fitted_holder[[i]]$datamods_stk[[mod]]))
+          data_tilde_mat[, j] <- fitted_holder[[i]]$datamods_stk[[mod]]$data
+        }
+
+        fitted[[i]]$datamods_stk[[mod]]$data_tilde <- lapply(seq_len(nrow(data_tilde_mat)), function(i) {
+          if (all(is.na(data_tilde_mat[i, ]))) {
+            NA
+          } else {
+            data_tilde_mat[i, which(!is.na(data_tilde_mat[i, ]))]
+          }
+        })
+      }
+      setTxtProgressBar(pb, i)
+    }
+
+    close(pb)
+  }
+
+
+  if ("events" %in% what) {
+    set.seed(seed_list$post_pred_events_seed)
+    post_pred_outs <- lapply(results_comp, function(x) x$events[c("time", "age", "outs")])
+    message("Drawing posterior predictive for outs")
+    pb <- txtProgressBar(
+      min = 0,
+      max = length(fitted_holder),
+      style = 3,
+      width = 50,
+      char = "="
+    )
+    for (i in 1:length(fitted_holder)) {
+      for (mod in 1:length(fitted_holder[[i]]$datamods_outs)) {
+        select_outs <- post_pred_outs[[i]]$outs
+        is_obs <- fitted_holder[[i]]$datamods_outs[[mod]]$is_obs
+        data_tilde_mat <- matrix(nrow = length(is_obs), ncol = n_draw)
+        for (j in 1:n_draw) {
+          j_outs <- lapply(select_outs, function(x) x[j]) |> unlist()
+          fitted_holder[[i]]$datamods_outs[[mod]]$data[which(is_obs == 1)] <- j_outs[which(is_obs == 1)]
+          suppressWarnings(fitted_holder[[i]]$datamods_outs[[mod]] <- rgen(fitted_holder[[i]]$datamods_outs[[mod]]))
+          data_tilde_mat[, j] <- fitted_holder[[i]]$datamods_outs[[mod]]$data
+        }
+        fitted[[i]]$datamods_outs[[mod]]$data_tilde <- lapply(seq_len(nrow(data_tilde_mat)), function(i) {
+          if (all(is.na(data_tilde_mat[i, ]))) {
+            NA
+          } else {
+            data_tilde_mat[i, which(!is.na(data_tilde_mat[i, ]))]
+          }
+        })
+      }
+      setTxtProgressBar(pb, i)
+    }
+
+    close(pb)
+
+    post_pred_ins <- lapply(results_comp, function(x) x$events[c("time", "age", "ins")])
+    message("Drawing posterior predictive for ins")
+    pb <- txtProgressBar(
+      min = 0,
+      max = length(fitted_holder),
+      style = 3,
+      width = 50,
+      char = "="
+    )
+    for (i in 1:length(fitted_holder)) {
+      for (mod in 1:length(fitted_holder[[i]]$datamods_ins)) {
+        select_ins <- post_pred_ins[[i]]$ins
+        is_obs <- fitted_holder[[i]]$datamods_ins[[mod]]$is_obs
+        data_tilde_mat <- matrix(nrow = length(is_obs), ncol = n_draw)
+        for (j in 1:n_draw) {
+          j_ins <- lapply(select_ins, function(x) x[j]) |> unlist()
+          fitted_holder[[i]]$datamods_ins[[mod]]$data[which(is_obs == 1)] <- j_ins[which(is_obs == 1)]
+          suppressWarnings(fitted_holder[[i]]$datamods_ins[[mod]] <- rgen(fitted_holder[[i]]$datamods_ins[[mod]]))
+          data_tilde_mat[, j] <- fitted_holder[[i]]$datamods_ins[[mod]]$data
+        }
+        fitted[[i]]$datamods_ins[[mod]]$data_tilde <- lapply(seq_len(nrow(data_tilde_mat)), function(i) {
+          if (all(is.na(data_tilde_mat[i, ]))) {
+            NA
+          } else {
+            data_tilde_mat[i, which(!is.na(data_tilde_mat[i, ]))]
+          }
+        })
+      }
+
+      setTxtProgressBar(pb, i)
+    }
+    close(pb)
+  }
+  all_mods_pop <- lapply(1:length(fitted), function(x) names(fitted[[x]]$datamods_stk)) |>
+    unlist() |>
+    unique()
+  all_mods_pop_tilde <- paste0(all_mods_pop, "_tilde")
+
+  if ("population" %in% what) {
+    augment_pop <- augment_population(object = object, collapse = NULL, width = width, n_draw = n_draw, na_rm = na_rm)
+    for (modt in all_mods_pop_tilde) {
+      augment_pop[[modt]] <- lapply(1:nrow(augment_pop), function(x) x)
+    }
+
+    for (i in 1:nrow(augment_pop)) {
+      cohort_i <- augment_pop$cohort[i]
+      sex_i <- augment_pop$sex[i]
+      location_i <- which(cohort == cohort_i & sex == sex_i)
+      time_i <- augment_pop$time[i]
+      age_i <- augment_pop$age[i]
+      n_mods <- length(fitted[[location_i]]$datamods_stk)
+
+      for (mod in 1:n_mods) {
+        time_age_mod <- which(fitted[[location_i]]$datamods_stk[[mod]]$time == time_i & fitted[[location_i]]$datamods_stk[[mod]]$age == age_i)
+        augment_pop[[which(all_mods_pop_tilde[mod] == names(augment_pop))]][[i]] <- unlist(fitted[[location_i]]$datamods_stk[[mod]]$data_tilde[[time_age_mod]])
+      }
+    }
+  }
+
+
+  if ("events" %in% what) {
+    all_mods_ins <- lapply(1:length(fitted), function(x) names(fitted[[x]]$datamods_ins)) |>
+      unlist() |>
+      unique()
+    all_mods_ins_tilde <- paste0(all_mods_ins, "_tilde")
+
+    all_mods_outs <- lapply(1:length(fitted), function(x) names(fitted[[x]]$datamods_outs)) |>
+      unlist() |>
+      unique()
+    all_mods_outs_tilde <- paste0(all_mods_outs, "_tilde")
+
+
+    augment_event <- augment_events(object = object, collapse = NULL, width = width, n_draw = n_draw, na_rm = na_rm)
+    for (modt in all_mods_ins_tilde) {
+      augment_event[[modt]] <- lapply(1:nrow(augment_event), function(x) x)
+    }
+    for (modt in all_mods_outs_tilde) {
+      augment_event[[modt]] <- lapply(1:nrow(augment_event), function(x) x)
+    }
+    for (i in 1:nrow(augment_event)) {
+      cohort_i <- augment_event$cohort[i]
+      sex_i <- augment_event$sex[i]
+      location_i <- which(cohort == cohort_i & sex == sex_i)
+      time_i <- augment_event$time[i]
+      age_i <- augment_event$age[i]
+      n_mods_ins <- length(fitted[[location_i]]$datamods_ins)
+      n_mods_outs <- length(fitted[[location_i]]$datamods_outs)
+
+      for (mod in 1:n_mods_ins) {
+        time_age_mod <- which(fitted[[location_i]]$datamods_ins[[mod]]$time == time_i & fitted[[location_i]]$datamods_ins[[mod]]$age == age_i)
+        augment_event[[which(all_mods_ins_tilde[mod] == names(augment_event))]][[i]] <- list(fitted[[location_i]]$datamods_ins[[mod]]$data_tilde[[time_age_mod]])
+      }
+      for (mod in 1:n_mods_outs) {
+        time_age_mod <- which(fitted[[location_i]]$datamods_outs[[mod]]$time == time_i & fitted[[location_i]]$datamods_outs[[mod]]$age == age_i)
+        augment_event[[which(all_mods_outs_tilde[mod] == names(augment_event))]][[i]] <- list(fitted[[location_i]]$datamods_outs[[mod]]$data_tilde[[time_age_mod]])
+      }
+    }
+  }
+
+  ans_out <- list()
+
+  if ("events" %in% what) {
+    ans_out[["post_pred_events"]] <- augment_event
+  }
+  if ("population" %in% what) {
+    ans_out[["post_pred_population"]] <- augment_pop
+  }
+
+
+
+
+  return(ans_out)
 }

@@ -8,6 +8,7 @@ test_that("'new_codatamod_norm' works with valid inputs - scale_ratio, scale_sd 
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0,
     scale_sd = 0
   )
@@ -26,6 +27,7 @@ test_that("'new_codatamod_norm' works with valid inputs - scale_ratio is non-zer
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0.1,
     scale_sd = 0
   )
@@ -45,6 +47,7 @@ test_that("'new_codatamod_norm' works with valid inputs - scale_sd is non-zero",
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0,
     scale_sd = 0.1
   )
@@ -68,6 +71,7 @@ test_that("'new_codatamod_t' works with valid inputs, scale_ratio equal 0", {
     df = rep(4, 10),
     ratio = rep(1, 10),
     scale = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   ans <- new_codatamod_t(args)
@@ -85,6 +89,7 @@ test_that("'new_codatamod_t' works with valid inputs, scale_ratio non-zero", {
     df = rep(4, 10),
     ratio = rep(1, 10),
     scale = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0.2
   )
   ans <- new_codatamod_t(args)
@@ -103,6 +108,7 @@ test_that("'new_codatamod_nbinom' works with valid inputs, scale_ratio equal 0",
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     disp = rep(0.1, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   ans <- new_codatamod_nbinom(args)
@@ -119,6 +125,7 @@ test_that("'new_codatamod_nbinom' works with valid inputs, scale_ratio non-zero"
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     disp = rep(0.1, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0.2
   )
   ans <- new_codatamod_nbinom(args)
@@ -136,6 +143,7 @@ test_that("'new_codatamod_poisson' works with valid inputs, scale_ratio equal 0"
     time = c(2000L, rep(2001:2004, each = 2), 2005L),
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   ans <- new_codatamod_poisson(args)
@@ -151,6 +159,7 @@ test_that("'new_codatamod_poisson' works with valid inputs, scale_ratio non-zero
     time = c(2000L, rep(2001:2004, each = 2), 2005L),
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0.2
   )
   ans <- new_codatamod_poisson(args)
@@ -169,6 +178,7 @@ test_that("'validate_codatamod' works with valid inputs", {
     is_obs = c(0L, rep(1L, 9)),
     ratio = rep(1, 10),
     sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_sd = rep(1, 10)
   )
   x <- new_codatamod_norm(args)
@@ -183,6 +193,7 @@ test_that("'validate_codatamod' throws expected error when 'data' and 'is_obs' i
     is_obs = c(rep(1L, 9), 0L),
     ratio = rep(1, 10),
     sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_sd = rep(1, 10)
   )
   x <- new_codatamod_norm(args)
@@ -204,6 +215,7 @@ test_that("'validate_codatamod_norm' works with valid inputs", {
     ratio = rep(1, 10),
     sd = rep(0.25, 10),
     scale_ratio = rep(0, 10),
+    data_tilde = rep(10, 10),
     scale_sd = rep(0, 10)
   )
   x <- new_codatamod_norm(args)
@@ -219,6 +231,7 @@ test_that("'validate_codatamod_norm' throws expected error when 'sd' is NA", {
     ratio = rep(1, 10),
     sd = c(rep(0.25, 9), NA),
     scale_ratio = rep(0, 10),
+    data_tilde = rep(10, 10),
     scale_sd = rep(0.1, 10)
   )
   x <- new_codatamod_norm(args)
@@ -240,6 +253,7 @@ test_that("'validate_codatamod_t' works with valid inputs", {
     df = rep(4, 10),
     ratio = rep(1, 10),
     scale = rep(0.25, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   x <- new_codatamod_t(args)
@@ -255,6 +269,7 @@ test_that("'validate_codatamod_t' throws expected error when 'scale' is NA", {
     df = rep(4, 10),
     ratio = rep(1, 10),
     scale = c(rep(0.25, 9), NA),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   x <- new_codatamod_t(args)
@@ -276,6 +291,7 @@ test_that("'validate_codatamod_nbinom' works with valid inputs", {
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     disp = rep(0.1, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   x <- new_codatamod_nbinom(args)
@@ -290,6 +306,7 @@ test_that("'validate_codatamod_nbinom' throws expected error when 'disp' is NA",
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
     disp = c(rep(0.1, 9), NA),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   x <- new_codatamod_nbinom(args)
@@ -308,6 +325,7 @@ test_that("'validate_codatamod_poisson' works with valid inputs", {
     time = c(2000L, rep(2001:2004, each = 2), 2005L),
     is_obs = rep(1L, 10),
     ratio = rep(1, 10),
+    data_tilde = rep(10, 10),
     scale_ratio = 0
   )
   x <- new_codatamod_poisson(args)
@@ -320,6 +338,7 @@ test_that("'validate_codatamod_poisson' throws expected error when 'ratio' is NA
     age = rep(0:4, each = 2),
     time = c(2000L, rep(2001:2004, each = 2), 2005L),
     is_obs = rep(1L, 10),
+    data_tilde = rep(10, 10),
     ratio = c(rep(0.1, 9), NA),
     scale_ratio = 0
   )

@@ -263,3 +263,93 @@ test_that("summary.dpmaccount_results works, including printing", {
   )
   expect_false(anyNA(unlist(ans)))
 })
+
+
+
+## 'post_pred.dpmaccount_results' ------------------------------------------------------------------
+
+test_that("summary.dpmaccount_results works, including printing", {
+  set.seed(0)
+  sysmod_births <- sysmod(
+    mean = gl_sysmod_mean_births,
+    disp = 0.2,
+    nm_series = "births"
+  )
+  sysmod_deaths <- sysmod(
+    mean = gl_sysmod_mean_deaths,
+    disp = 0.2,
+    nm_series = "deaths"
+  )
+  sysmod_ins <- sysmod(
+    mean = gl_sysmod_mean_immig,
+    disp = 0.2,
+    nm_series = "ins"
+  )
+  sysmod_outs <- sysmod(
+    mean = gl_sysmod_mean_emig,
+    disp = 0.2,
+    nm_series = "outs"
+  )
+  sysmods <- list(
+    sysmod_births,
+    sysmod_deaths,
+    sysmod_ins,
+    sysmod_outs
+  )
+  datamod_popn <- datamod_norm(
+    data = gl_report_popn,
+    sd = gl_cover_sd_popn,
+    nm_series = "population"
+  )
+  datamod_births <- datamod_exact(
+    data = gl_report_births,
+    nm_series = "births"
+  )
+  datamod_deaths <- datamod_exact(
+    data = gl_report_deaths,
+    nm_series = "deaths"
+  )
+  datamod_ins <- datamod_norm(
+    data = gl_report_immig,
+    sd = gl_cover_sd_immig,
+    nm_series = "ins"
+  )
+  datamod_outs <- datamod_norm(
+    data = gl_report_emig,
+    sd = gl_cover_sd_emig,
+    nm_series = "outs"
+  )
+  datamods <- list(
+    datamod_popn = datamod_popn,
+    datamod_births = datamod_births,
+    datamod_deaths = datamod_deaths,
+    datamod_ins = datamod_ins,
+    datamod_outs = datamod_outs
+  )
+  results <- estimate_account(
+    sysmods = sysmods,
+    datamods = datamods
+  )
+
+  augment_pop <- augment_population(results, n_draw = 2)
+  augment_event <- augment_events(results, n_draw = 2)
+
+  post_pred <- post_pred.dpmaccount_results(results, n_draw = 2)
+
+  #
+  expect_false(anyNA(unlist(post_pred$post_pred_events$gl_report_immig_tilde)))
+  expect_false(anyNA(unlist(post_pred$post_pred_events$gl_report_emig_tilde)))
+  expect_false(anyNA(unlist(post_pred$post_pred_population$gl_report_popn_tilde)))
+
+  #
+  expect_false(any(unlist(post_pred$post_pred_events$gl_report_immig_tilde) <= -1e-15))
+  expect_false(any(unlist(post_pred$post_pred_events$gl_report_emig_tilde) <= -1e-15))
+  expect_false(any(unlist(post_pred$post_pred_population$gl_report_popn_tilde) <= -1e-15))
+
+  expect_true(nrow(post_pred$post_pred_events) == nrow(augment_event))
+  expect_true(nrow(post_pred$post_pred_population) == nrow(augment_pop))
+
+  expect_true(all(unlist(lapply(post_pred$post_pred_events$gl_report_immig_tilde, function(x) length(x[[1]]))) == 2))
+  expect_true(all(unlist(lapply(post_pred$post_pred_events$gl_report_emig_tilde, function(x) length(x[[1]]))) == 2))
+  expect_true(all(unlist(lapply(post_pred$post_pred_population$gl_report_popn_tilde, function(x) length(x[[1]]))) == 1))
+})

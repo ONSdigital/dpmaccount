@@ -382,16 +382,12 @@ Type objective_function<Type>::operator() ()
   // population accounting equation
   vector<Type> val_stk(K+1);
   val_stk[0] = val_stk_init;
-  for (int k = 0; k < K; k++)
-    val_stk[k+1] = val_stk[k] - val_dth[k] + val_ins[k] - val_outs[k];
-
-  // exposure (we use 0.25, rather than 0.5, because
-  // we are working with Lexis triangles)
   vector<Type> exposure(K);
-  exposure[0] = 0.25 * (val_stk_init + val_stk[0]);
-  for (int k = 1; k < K; k++)
-    exposure[k] = 0.25 * (val_stk[k-1] + val_stk[k]);
   
+  for (int k = 0; k < K; k++){
+    val_stk[k+1] = val_stk[k] - val_dth[k] + val_ins[k] - val_outs[k];
+    exposure[k] = 0.25 * (val_stk[k] + val_stk[k+1]);
+  }
   
   // negative log posterior ---------------------------------------------------
   

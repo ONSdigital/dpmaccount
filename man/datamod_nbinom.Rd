@@ -18,7 +18,7 @@ datamod_nbinom(
 
 \item{ratio}{A single number, or a data frame. (Default is 1.).}
 
-\item{disp}{A single number, or a data frame with a variable called \code{"disp"}. (Default is 1.)}
+\item{disp}{A single number, or a data frame with a variable called \code{"disp"}. (Default is 1. Must be greater than 1e-6)}
 
 \item{scale_ratio}{A non-negative number. (Default is 0).}
 
@@ -41,18 +41,17 @@ or \href{https://mc-stan.org/docs/2_20/functions-reference/nbalt.html}{stan docs
 \details{
 Let \eqn{y} be the reported count and \eqn{x} the true count.
 Let \eqn{r} and \eqn{d} be ratio and dispersion parameters.
-Let \eqn{v = 1/d}. When \eqn{d > 0}, the probability mass function
-is (when \code{scale_ratio} takes the default value of zero)
+Let \eqn{v = 1/d}. When \eqn{d > 0} and \code{scale_ratio} takes the default value of zero, the probability mass function
+is
 \deqn{
 Pr(Y=y) = \Gamma(v + y) / (y! \Gamma(v))
     (v / (v + r x))^v
     ((r x) / (v + r x))^y
 }
-When \eqn{d=0}, the distribution reduces to the Poisson distribution,
-so that the probability mass function is
-\deqn{
-Pr(Y=y) = (1/(y!)) e^(-rx) (rx)^y
-}
+When \eqn{d=0}, the distribution theoretically reduces to the Poisson distribution.
+However, within dpmaccount, \eqn{d=0} is currently not allowed for the negative binomial
+datamodel and an error is returned.
+For dispersion only the following values are acceptable \eqn{d > 1e-6}.
 
 When \code{scale_ratio} is greater than zero the data model becomes
 \deqn{

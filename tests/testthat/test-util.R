@@ -1,3 +1,36 @@
+## 'draw_counts' --------------------------------------------------------
+
+test_that("'draw_counts works with 'stk_init' uncertain - adj needed", {
+  set.seed(0)
+  n_draw <- 100L
+  K <- 6
+  mean <- log(seq(from = 11, length.out = 2 * K + 1, by = 10))
+  sd <- diag(seq(from = 0.3, length.out = 2 * K + 1, by = 0.1))
+  sd[sd == 0] <- 0.05
+  var <- crossprod(sd)
+  val_dth <- rep(9, times = K)
+  ans <- draw_counts(
+    n_draw = n_draw,
+    mean = mean,
+    var = var,
+    val_dth = val_dth,
+    cohort = 2000,
+    sex = "F"
+  )
+  expect_equal(
+    ans$val_stk[1, ] - ans$val_stk_init,
+    ans$val_ins[1, ] - ans$val_dth[1, ] - ans$val_outs[1, ]
+  )
+  expect_equal(
+    ans$val_stk[3, ] - ans$val_stk[2, ],
+    ans$val_ins[3, ] - ans$val_dth[3, ] - ans$val_outs[3, ]
+  )
+  expect_true(all(unlist(ans) >= 0))
+  expect_identical(ncol(ans$val_stk), n_draw)
+  expect_true(ans$n_adj > 0L)
+})
+
+
 ## 'elements_setequal' --------------------------------------------------------
 
 test_that("'elements_setequal' works with valid inputs", {
@@ -259,7 +292,7 @@ test_that("'make_seed_account' works with valid inputs", {
     "prior_rate_seed", "draw_counts_seed",
     "draw_par_datamods_seed", "draw_rates_ins_seed",
     "draw_rates_outs_seed", "draw_rates_dth_seed",
-    "draw_rates_bth_seed"
+    "draw_rates_bth_seed", "post_pred_pop_seed", "post_pred_events_seed"
   ))
 })
 
@@ -269,7 +302,7 @@ test_that("'make_seed_account' works with default inputs", {
     "prior_rate_seed", "draw_counts_seed",
     "draw_par_datamods_seed", "draw_rates_ins_seed",
     "draw_rates_outs_seed", "draw_rates_dth_seed",
-    "draw_rates_bth_seed"
+    "draw_rates_bth_seed", "post_pred_pop_seed", "post_pred_events_seed"
   ))
 })
 
@@ -282,7 +315,9 @@ test_that("'make_seed_account' returns expected seeds - seed_in = 0", {
     draw_rates_ins_seed = 1711075799L,
     draw_rates_outs_seed = 690659598L,
     draw_rates_dth_seed = 265368763L,
-    draw_rates_bth_seed = 758296545L
+    draw_rates_bth_seed = 758296545L,
+    post_pred_pop_seed = 1649722645L,
+    post_pred_events_seed = 2137634742L
   )
   expect_identical(seed_list, seed_list_expected)
 })

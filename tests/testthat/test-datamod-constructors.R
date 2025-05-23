@@ -12,13 +12,24 @@ test_that("'datamod_exact' works with valid inputs", {
   data$count <- seq_len(nrow(data))
   nm_series <- "births"
   nm_data <- "birthdata"
-  ans <- datamod_exact(
+  ans_obtained <- datamod_exact(
     data = data,
-    nm_series = nm_series
+    nm_series = nm_series,
+    nm_data = nm_data
   )
-  expect_s3_class(ans, "dpmaccount_datamod_exact")
-  expect_s3_class(ans, "dpmaccount_datamod")
-  expect_identical(ans$nm_data, "data")
+
+  data <- tibble::tibble(data)
+  ans_expected <- list(
+    data = data,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_exact", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_exact")
+  expect_s3_class(ans_obtained, "dpmaccount_datamod")
+  expect_identical(ans_obtained$nm_data, "birthdata")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_exact' fails with invalid inputs - sex coding is invalid (male/female)", {
@@ -52,6 +63,9 @@ test_that("'datamod_norm' works with valid inputs - ratio is number, scale_ratio
     time = 2000:2002
   )
   data$count <- seq_len(nrow(data))
+
+  data2 <- data
+
   ratio <- 1
   sd <- expand.grid(
     age = 0:2,
@@ -61,14 +75,30 @@ test_that("'datamod_norm' works with valid inputs - ratio is number, scale_ratio
   sd$sd <- 0.2
   nm_series <- "population"
   nm_data <- "popdata"
-  ans <- datamod_norm(
+
+  data2$cohort <- with(data2, time - age)
+  ans_obtained <- datamod_norm(
     data = data,
     ratio = ratio,
     sd = sd,
     nm_series = nm_series,
     nm_data = nm_data
   )
-  expect_s3_class(ans, "dpmaccount_datamod_norm")
+
+  data2 <- tibble::tibble(data2)
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0,
+    scale_sd = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_norm", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_norm")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_norm' works with valid inputs - ratio is number, scale_ratio, scale_sd both non-zero", {
@@ -78,6 +108,10 @@ test_that("'datamod_norm' works with valid inputs - ratio is number, scale_ratio
     time = 2000:2002
   )
   data$count <- seq_len(nrow(data))
+
+  data2 <- data
+  data2$cohort <- with(data2, time - age)
+
   ratio <- 1
   sd <- expand.grid(
     age = 0:2,
@@ -87,7 +121,7 @@ test_that("'datamod_norm' works with valid inputs - ratio is number, scale_ratio
   sd$sd <- 0.2
   nm_series <- "population"
   nm_data <- "popdata"
-  ans <- datamod_norm(
+  ans_obtained <- datamod_norm(
     data = data,
     ratio = ratio,
     sd = sd,
@@ -96,7 +130,21 @@ test_that("'datamod_norm' works with valid inputs - ratio is number, scale_ratio
     nm_series = nm_series,
     nm_data = nm_data
   )
-  expect_s3_class(ans, "dpmaccount_datamod_norm")
+
+  data2 <- tibble::tibble(data2)
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0.2,
+    scale_sd = 0.1,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_norm", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_norm")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_norm' works with valid inputs - ratio is data frame", {
@@ -106,6 +154,10 @@ test_that("'datamod_norm' works with valid inputs - ratio is data frame", {
     time = 2000:2002
   )
   data$count <- seq_len(nrow(data))
+
+  data2 <- data
+  data2$cohort <- with(data2, time - age)
+
   ratio <- expand.grid(
     age = 0:2,
     sex = c("Female", "Male"),
@@ -119,14 +171,29 @@ test_that("'datamod_norm' works with valid inputs - ratio is data frame", {
   )
   sd$sd <- 0.2
   nm_series <- "population"
-  ans <- datamod_norm(
+  nm_data <- "data"
+  ans_obtained <- datamod_norm(
     data = data,
     ratio = ratio,
     sd = sd,
     nm_series = nm_series
   )
-  expect_s3_class(ans, "dpmaccount_datamod_norm")
-  expect_identical(ans$nm_data, "data")
+
+  data2 <- tibble::tibble(data2)
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0,
+    scale_sd = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_norm", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_norm")
+  expect_identical(ans_obtained$nm_data, "data")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_norm' gives expected error when ratio invalid", {
@@ -231,7 +298,7 @@ test_that("'datamod_t' works with valid inputs - ratio is number, scale_ratio is
   scale$scale <- 0.2
   nm_series <- "population"
   nm_data <- "popdata"
-  ans <- datamod_t(
+  ans_obtained <- datamod_t(
     data = data,
     df = 4,
     ratio = ratio,
@@ -239,7 +306,23 @@ test_that("'datamod_t' works with valid inputs - ratio is number, scale_ratio is
     nm_series = nm_series,
     nm_data = nm_data
   )
-  expect_s3_class(ans, "dpmaccount_datamod_t")
+  data2 <- tibble::tibble(data)
+  data2$cohort <- with(data2, time - age)
+
+  ans_expected <- list(
+    data = data2,
+    df = 4,
+    ratio = ratio,
+    scale = scale,
+    scale_ratio = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_t", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_t")
+  expect_identical(ans_obtained$nm_data, "popdata")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_t' works with valid inputs - ratio is number, scale_ratio is non-zero", {
@@ -258,7 +341,7 @@ test_that("'datamod_t' works with valid inputs - ratio is number, scale_ratio is
   scale$scale <- 0.2
   nm_series <- "population"
   nm_data <- "popdata"
-  ans <- datamod_t(
+  ans_obtained <- datamod_t(
     data = data,
     df = 4,
     ratio = ratio,
@@ -267,7 +350,23 @@ test_that("'datamod_t' works with valid inputs - ratio is number, scale_ratio is
     nm_series = nm_series,
     nm_data = nm_data
   )
-  expect_s3_class(ans, "dpmaccount_datamod_t")
+  data2 <- tibble::tibble(data)
+  data2$cohort <- with(data2, time - age)
+
+  ans_expected <- list(
+    data = data2,
+    df = 4,
+    ratio = ratio,
+    scale = scale,
+    scale_ratio = 0.2,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_t", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_t")
+  expect_identical(ans_obtained$nm_data, "popdata")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_t' works with valid inputs - ratio is data frame, scale_ratio is 0 (default)", {
@@ -290,15 +389,31 @@ test_that("'datamod_t' works with valid inputs - ratio is data frame, scale_rati
   )
   scale$scale <- 0.2
   nm_series <- "population"
-  ans <- datamod_t(
+  nm_data <- "data"
+  ans_obtained <- datamod_t(
     data = data,
     df = 4,
     ratio = ratio,
     scale = scale,
     nm_series = nm_series
   )
-  expect_s3_class(ans, "dpmaccount_datamod_t")
-  expect_identical(ans$nm_data, "data")
+  data2 <- tibble::tibble(data)
+  data2$cohort <- with(data2, time - age)
+
+  ans_expected <- list(
+    data = data2,
+    df = 4,
+    ratio = ratio,
+    scale = scale,
+    scale_ratio = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_t", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_t")
+  expect_identical(ans_obtained$nm_data, "data")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_t' gives expected error when ratio invalid", {
@@ -396,17 +511,41 @@ test_that("'datamod_nbinom' creates object of class 'dpmaccount_datamod_nbinom' 
     time = 2000:2002,
     triangle = 0:1
   )
+
   classif_vars$cohort <- with(classif_vars, time - age - triangle)
   classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
-  classif_vars <- tibble::tibble(classif_vars)
   data <- classif_vars
+  ratio <- classif_vars
+  disp <- classif_vars
   data$count <- seq_len(nrow(data))
-  ans <- datamod_nbinom(
+  ratio$ratio <- 1
+  disp$disp <- 1
+
+  data2 <- tibble::tibble(data)
+
+  # data2$cohort <- with(data2, time - age)
+  nm_data <- "reg_immig"
+  nm_series <- "ins"
+
+  ans_obtained <- datamod_nbinom(
     data = data,
     nm_series = "ins",
     nm_data = "reg_immig"
   )
-  expect_s3_class(ans, c("dpmaccount_datamod_nbinom", "dpmaccount_datamod"))
+
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    disp = disp,
+    scale_ratio = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_nbinom", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, c("dpmaccount_datamod_nbinom", "dpmaccount_datamod"))
+  expect_identical(ans_obtained$nm_data, "reg_immig")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_nbinom' creates object of class 'dpmaccount_datamod_nbinom' - ratio and disp both 1,
@@ -417,18 +556,42 @@ test_that("'datamod_nbinom' creates object of class 'dpmaccount_datamod_nbinom' 
     time = 2000:2002,
     triangle = 0:1
   )
+
   classif_vars$cohort <- with(classif_vars, time - age - triangle)
   classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
-  classif_vars <- tibble::tibble(classif_vars)
   data <- classif_vars
+  ratio <- classif_vars
+  disp <- classif_vars
   data$count <- seq_len(nrow(data))
-  ans <- datamod_nbinom(
+  ratio$ratio <- 1
+  disp$disp <- 1
+
+  data2 <- tibble::tibble(data)
+
+  # data2$cohort <- with(data2, time - age)
+  nm_data <- "reg_immig"
+  nm_series <- "ins"
+
+  ans_obtained <- datamod_nbinom(
     data = data,
     scale_ratio = 0.1,
     nm_series = "ins",
     nm_data = "reg_immig"
   )
-  expect_s3_class(ans, c("dpmaccount_datamod_nbinom", "dpmaccount_datamod"))
+
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    disp = disp,
+    scale_ratio = 0.1,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_nbinom", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, c("dpmaccount_datamod_nbinom", "dpmaccount_datamod"))
+  expect_identical(ans_obtained$nm_data, "reg_immig")
+  expect_identical(ans_obtained, ans_expected)
 })
 
 test_that("'datamod_nbinom' creates object of class 'datamod_nbinom' - ratio and disp both df", {
@@ -449,7 +612,7 @@ test_that("'datamod_nbinom' creates object of class 'datamod_nbinom' - ratio and
   )
   disp <- within(data, {
     rm(count)
-    disp <- 0
+    disp <- 1
   })
   ans <- datamod_nbinom(
     data = data,
@@ -524,6 +687,53 @@ test_that("'datamod_nbinom' gives expected error with invalid inputs - invalid '
   )
 })
 
+test_that("'datamod_nbinom' gives expected error with invalid inputs - invalid 'sex' coding", {
+  classif_vars <- expand.grid(
+    age = 0:2,
+    sex = c("female", "male"),
+    time = 2000:2002,
+    triangle = 0:1
+  )
+  classif_vars$cohort <- with(classif_vars, time - age - triangle)
+  classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
+  classif_vars <- tibble::tibble(classif_vars)
+  data <- classif_vars
+  data$count <- seq_len(nrow(data))
+  expect_error(
+    datamod_nbinom(
+      data = data,
+      nm_series = "ins",
+      nm_data = "reg_immig"
+    ),
+    "problem with invalid coding for 'sex' in data frame 'data':"
+  )
+})
+
+test_that("'datamod_nbinom' gives error with invalid inputs - negative dispersion", {
+  classif_vars <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002,
+    triangle = 0:1
+  )
+  classif_vars$cohort <- with(classif_vars, time - age - triangle)
+  classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
+  classif_vars <- tibble::tibble(classif_vars)
+  data <- classif_vars
+  data$count <- seq_len(nrow(data))
+  disp <- within(data, {
+    rm(count)
+    disp <- -1
+  })
+  expect_error(
+    datamod_nbinom(
+      data = data,
+      nm_series = "ins",
+      nm_data = "reg_immig",
+      disp = disp
+    )
+  )
+})
 
 ## 'new_datamod_exact' --------------------------------------------------------
 

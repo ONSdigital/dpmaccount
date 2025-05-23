@@ -11,6 +11,42 @@ test_that("'check_age' returns correct error with invalid inputs", {
     check_age(df, nm_df = "data"),
     "problem with variable 'age' in data frame 'data' :"
   )
+
+  df <- data.frame(age = -10:-1)
+  expect_error(
+    check_age(df, nm_df = "data"),
+    "problem with variable 'age' in data frame 'data' :"
+  )
+
+  df <- data.frame(age = c(0:10, -1))
+  expect_error(
+    check_age(df, nm_df = "data"),
+    "problem with variable 'age' in data frame 'data' :"
+  )
+
+  df <- data.frame(age = letters)
+  expect_error(
+    check_age(df, nm_df = "data"),
+    "problem with variable 'age' in data frame 'data' :"
+  )
+
+  df <- data.frame(age = c(0:3, letters))
+  expect_error(
+    check_age(df, nm_df = "data"),
+    "problem with variable 'age' in data frame 'data' :"
+  )
+
+  df <- data.frame(age = c(0:3, pi))
+  expect_error(
+    check_age(df, nm_df = "data"),
+    "problem with variable 'age' in data frame 'data' :"
+  )
+
+  df <- data.frame(age = c(0:3, NA_real_))
+  expect_error(
+    check_age(df, nm_df = "data"),
+    "problem with variable 'age' in data frame 'data' :"
+  )
 })
 
 
@@ -35,9 +71,13 @@ test_that("'check_age_complete' raises correct error when min age not 0", {
 })
 
 test_that("'check_age_complete' raises correct error when missing intermediate level", {
-  df <- data.frame(age = c(1:10, 12:20))
+  df <- data.frame(age = c(0:10, 12:20))
   expect_error(
     check_age_complete(df, nm_df = "data", is_births = TRUE),
+    "'age' variable in data frame 'data' is missing value '11'"
+  )
+  expect_error(
+    check_age_complete(df, nm_df = "data", is_births = FALSE),
     "'age' variable in data frame 'data' is missing value '11'"
   )
 })
@@ -131,6 +171,16 @@ test_that("'check_cohort' returns TRUE with valid inputs", {
 
 test_that("'check_cohort' returns correct error with invalid inputs", {
   df <- data.frame(cohort = 0.5)
+  expect_error(
+    check_cohort(df, nm_df = "data"),
+    "problem with variable 'cohort' in data frame 'data' :"
+  )
+  df <- data.frame(cohort = "5")
+  expect_error(
+    check_cohort(df, nm_df = "data"),
+    "problem with variable 'cohort' in data frame 'data' :"
+  )
+  df <- data.frame(cohort = "pi")
   expect_error(
     check_cohort(df, nm_df = "data"),
     "problem with variable 'cohort' in data frame 'data' :"
@@ -358,6 +408,41 @@ test_that("'check_datamods' returns correct errors with wrong number of births/d
   )
 })
 
+test_that("'check_datamods' returns correct error with inconsistent time values for births/deaths", {
+  classif_vars <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2001,
+    triangle = 0:1
+  )
+  classif_vars$cohort <- with(classif_vars, time - age - triangle)
+  classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
+
+  classif_vars2 <- classif_vars
+  classif_vars2$time <- classif_vars2$time + 1
+  classif_vars2$cohort <- classif_vars2$cohort + 1
+
+  mod_bth <- datamod_exact(
+    data = within(classif_vars, {
+      count <- 2
+    }),
+    nm_data = "data1",
+    nm_series = "births"
+  )
+  mod_dth <- datamod_exact(
+    data = within(classif_vars2, {
+      count <- 3
+    }),
+    nm_data = "data2",
+    nm_series = "deaths"
+  )
+  datamods <- list(mod_bth, mod_dth)
+  expect_error(
+    check_datamods(datamods),
+    "data models for births and deaths have inconsistent categories for variable 'time'"
+  )
+})
+
 
 ## 'check_df' -----------------------------------------------------------------
 
@@ -484,6 +569,21 @@ test_that("'check_df_data' returns TRUE with valid inputs, is_popn = FALSE", {
   expect_true(check_df_data(df,
     nm_df = "data",
     is_popn = FALSE
+  ))
+})
+
+test_that("'check_df_data' returns correct error with invalid inputs, dataframe contains cohort variable, is_popn = TRUE", {
+  df <- data.frame(
+    age = 0:3,
+    sex = rep(c("Female", "Male"), times = 2),
+    time = rep(2000:2001, each = 2),
+    count = c(0, NA, 1, 2)
+  )
+  df$cohort <- df$time - df$age
+  expect_error(check_df_data(df,
+    nm_df = "data",
+    is_popn = TRUE,
+    "data frame 'df' has variable called \"cohort\""
   ))
 })
 
@@ -780,7 +880,6 @@ test_that("'check_df_sysmod' returns error with dataframe containing missing val
   ), "problem with 'disp' :")
 })
 
-
 test_that("'check_df_sysmod' returns TRUE with valid inputs - sex and time, not births", {
   df <- data.frame(
     sex = rep(c("Female", "Male"), times = 2),
@@ -811,6 +910,24 @@ test_that("'check_df_sysmod' returns TRUE with valid inputs - cohort and age, is
   ))
 })
 
+test_that("'check_df_sysmod' returns TRUE with valid inputs - cohort and age, is births", {
+  df <- data.frame(
+    cohort = 2000:2003,
+    age = c(10:12, 14),
+    disp = c(0.1, 0, 1.1, 2)
+  )
+  expect_error(
+    check_df_sysmod(df,
+      nm_df = "disp",
+      nm_measure_var = "disp",
+      is_births = TRUE,
+      min = NULL,
+      max = NULL
+    ),
+    "'age' variable in data frame 'disp' is missing value '13'"
+  )
+})
+
 test_that("'check_df_sysmod' raises correct error with mean above max", {
   df <- data.frame(
     cohort = 2000:2003,
@@ -825,7 +942,6 @@ test_that("'check_df_sysmod' raises correct error with mean above max", {
     max = 1
   ))
 })
-
 
 
 ## 'check_is_bth_dth' ---------------------------------------------------------
@@ -1127,20 +1243,35 @@ test_that("'check_nm_data_clash' returns correct error with invalid inputs", {
   )
 })
 
-
-## 'check_no_na' --------------------------------------------------------------
-
-test_that("'check_no_na' returns TRUE with valid inputs", {
-  df <- data.frame(x = 1:3)
-  expect_true(check_no_na(df = df, nm_x = "x", nm_df = "data"))
+test_that("'check_nm_data_clash' returns correct error with invalid inputs", {
+  expect_error(
+    check_nm_data_clash("deaths"),
+    paste(
+      "dataset has same name \\[\"deaths\"\\] as a demographic series :",
+      "demographic series are \"population\", \"births\",",
+      "\"deaths\", \"ins\", \"outs\""
+    )
+  )
 })
 
-test_that("'check_no_na' throws correct error with NA", {
-  df <- data.frame(x = c(1:3, NA))
-  expect_error(
-    check_no_na(df = df, nm_x = "x", nm_df = "data"),
-    "variable 'x' in data frame 'data' has NAs"
+## 'check_no_na' ------------------------------------------------------
+
+test_that("'check_no_na' returns TRUE with valid inputs", {
+  df <- data.frame(
+    age = rep(0:1, times = 2),
+    time = rep(2000:2001, each = 2),
+    value = c(50, 10, 0.0001, 3)
   )
+  expect_true(check_no_na(df, "value", "births"))
+})
+
+test_that("'check_no_na' returns correct error with invalid inputs", {
+  df <- data.frame(
+    age = rep(0:1, times = 2),
+    time = rep(2000:2001, each = 2),
+    value = c(50, NA, 0.0001, 3)
+  )
+  expect_error(check_no_na(df, "value", "deaths"), "variable 'value' in data frame 'deaths' has NAs")
 })
 
 
@@ -1149,6 +1280,7 @@ test_that("'check_no_na' throws correct error with NA", {
 test_that("'check_scale' returns TRUE with valid inputs", {
   expect_true(check_scale(1L, x_arg = "x", zero_ok = FALSE))
   expect_true(check_scale(0.001, x_arg = "x", zero_ok = FALSE))
+  expect_true(check_scale(0, x_arg = "x", zero_ok = TRUE))
 })
 
 test_that("'check_scale' returns correct error with non-numeric", {
@@ -1298,13 +1430,12 @@ test_that("'check_sex_complete' returns correct error with invalid inputs", {
 
 ## 'check_sysmods' ------------------------------------------------------------
 
-test_that("'check_sysmods' returns TRUE with valid inputs", {
+test_that("'check_sysmods' returns TRUE with valid inputs - age-period", {
   classif_vars1 <- expand.grid(
     age = 0:2,
     sex = c("Female", "Male"),
     time = 2000:2001
   )
-  classif_vars2 <- data.frame(age = 0:2)
   classif_vars3 <- data.frame(age = 1)
   mod_bth <- sysmod(
     mean = within(classif_vars3, {
@@ -1336,13 +1467,55 @@ test_that("'check_sysmods' returns TRUE with valid inputs", {
   expect_true(check_sysmods(sysmods))
 })
 
-test_that("'check_sysmods' returns current error with duplicate 'nm_series'", {
+test_that("'check_sysmods' returns TRUE with valid inputs - cohort-period", {
+  classif_vars1 <- expand.grid(
+    time = seq(2020, 2021),
+    sex = c("Female", "Male"),
+    age = seq(0, 3)
+  ) %>%
+    dplyr::mutate(
+      cohort = time - age,
+      mean = 0.1
+    ) %>%
+    dplyr::select(-age)
+
+  classif_vars2 <- classif_vars1 %>% dplyr::filter((time - cohort) == 1)
+  mod_bth <- sysmod(
+    mean = within(classif_vars2, {
+      mean <- 0.2
+    }),
+    disp = 0.2,
+    nm_series = "births"
+  )
+  mod_dth <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 0.2
+    }),
+    disp = 0.2,
+    nm_series = "deaths"
+  )
+  mod_ins <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 1.2
+    }),
+    nm_series = "ins"
+  )
+  mod_outs <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 0.1
+    }),
+    nm_series = "outs"
+  )
+  sysmods <- list(mod_bth, mod_dth, mod_ins, mod_outs)
+  expect_true(check_sysmods(sysmods))
+})
+
+test_that("'check_sysmods' returns correct error with duplicate 'nm_series'", {
   classif_vars1 <- expand.grid(
     age = 0:2,
     sex = c("Female", "Male"),
     time = 2000:2001
   )
-  classif_vars2 <- data.frame(age = 0:2)
   classif_vars3 <- data.frame(age = 1)
   mod_bth <- sysmod(
     mean = within(classif_vars3, {
@@ -1417,6 +1590,93 @@ test_that("'check_sysmods' returns current error with inconsistent variables - a
   )
 })
 
+test_that("'check_sysmods' returns current error with inconsistent variables - cohort", {
+  classif_vars1 <- expand.grid(
+    time = seq(2020, 2021),
+    sex = c("Female", "Male"),
+    age = seq(0, 3)
+  ) %>%
+    dplyr::mutate(
+      cohort = time - age,
+      mean = 0.1
+    ) %>%
+    dplyr::select(-age)
+
+  classif_vars2 <- classif_vars1 %>% dplyr::filter((time - cohort) == 1)
+
+  mod_bth <- sysmod(
+    mean = within(classif_vars2, {
+      mean <- 0.2
+    }),
+    disp = 0.2,
+    nm_series = "births"
+  )
+  mod_dth <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 0.2
+    }),
+    disp = 0.2,
+    nm_series = "deaths"
+  )
+  mod_ins <- sysmod(
+    mean = within(classif_vars2, {
+      mean <- 1.2
+    }),
+    nm_series = "ins"
+  )
+  mod_outs <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 0.1
+    }),
+    nm_series = "outs"
+  )
+  sysmods <- list(mod_bth, mod_dth, mod_ins, mod_outs)
+  expect_error(
+    check_sysmods(sysmods),
+    "system models have inconsistent categories for variable 'cohort'"
+  )
+})
+
+test_that("'check_sysmods' returns correct error with inconsistent variables - time", {
+  classif_vars1 <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2001
+  )
+  classif_vars2 <- data.frame(time = c(2000:2002))
+  mod_bth <- sysmod(
+    mean = within(classif_vars2, {
+      mean <- 0.2
+    }),
+    disp = 0.2,
+    nm_series = "births"
+  )
+  mod_dth <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 0.2
+    }),
+    disp = 0.2,
+    nm_series = "deaths"
+  )
+  mod_ins <- sysmod(
+    mean = within(classif_vars2, {
+      mean <- 1.2
+    }),
+    nm_series = "ins"
+  )
+  mod_outs <- sysmod(
+    mean = within(classif_vars1, {
+      mean <- 0.1
+    }),
+    nm_series = "outs"
+  )
+  sysmods <- list(mod_bth, mod_dth, mod_ins, mod_outs)
+  expect_error(
+    check_sysmods(sysmods),
+    "system models have inconsistent categories for variable 'time'"
+  )
+})
+
 
 ## 'check_time' ---------------------------------------------------------------
 
@@ -1433,6 +1693,16 @@ test_that("'check_time' returns correct error with invalid inputs", {
   df <- data.frame(
     sex = rep(c("Female", "Male"), times = 2),
     time = c(0.1, 2000, 2000, 2000),
+    value = c(0, NA, 1, 0.2)
+  )
+  expect_error(
+    check_time(df, nm_df = "data"),
+    "problem with variable 'time' in data frame 'data' :"
+  )
+
+  df <- data.frame(
+    sex = rep(c("Female", "Male"), times = 2),
+    time = c(NA, 2000, 2000, 2000),
     value = c(0, NA, 1, 0.2)
   )
   expect_error(

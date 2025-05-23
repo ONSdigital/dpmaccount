@@ -166,7 +166,11 @@ estimate_account <- function(sysmods,
   ## fit models
   fitted <- lapply(comod, fit, keep_adfun = keep_adfun)
   # draw seeds
-  seed_list <- make_seed_account(seed_in = seed_in)
+  if (!is.null(seed_in)) {
+    set.seed(seed_in)
+  }
+  seed_list <- lapply(sample(1:.Machine$integer.max, size = length(comod)), function(x) make_seed_account(seed_in = x))
+
   ## return results
   if (keep_adfun) {
     adfun <- lapply(fitted, function(x) x$adfun)

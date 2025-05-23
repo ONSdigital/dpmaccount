@@ -1348,8 +1348,9 @@ check_sysmods <- function(sysmods) {
       call. = FALSE
     )
   }
-  ## same classification variables (with possible
-  ## exception of age for births)
+  ## same classification variables (with possible exception
+  ## of age/cohort for births (depending on whether using
+  ## age-period or cohort-period definitions))
   l_classif_vars <- lapply(sysmods, get_classif_vars)
   is_births <- nms_series == "births"
   has_age <- vapply(l_classif_vars, function(x) "age" %in% names(x), TRUE)
@@ -1363,7 +1364,18 @@ check_sysmods <- function(sysmods) {
       call. = FALSE
     )
   }
-  for (vname in c("sex", "cohort", "time")) {
+  has_cohort <- vapply(l_classif_vars, function(x) "cohort" %in% names(x), TRUE)
+  cohorts <- lapply(l_classif_vars[!is_births & has_cohort], function(x) x$cohort)
+  if (!elements_setequal(cohorts)) {
+    stop(
+      gettextf(
+        "system models have inconsistent categories for variable '%s'",
+        "cohort"
+      ),
+      call. = FALSE
+    )
+  }
+  for (vname in c("sex", "time")) {
     has_var <- vapply(l_classif_vars, function(x) vname %in% names(x), TRUE)
     if (any(has_var)) {
       vars <- lapply(l_classif_vars[has_var], function(x) x[[vname]])

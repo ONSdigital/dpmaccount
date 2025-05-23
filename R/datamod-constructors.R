@@ -698,18 +698,18 @@ new_datamod_t <- function(data,
 #'
 #' Let \eqn{y} be the reported count and \eqn{x} the true count.
 #' Let \eqn{r} and \eqn{d} be ratio and dispersion parameters.
-#' Let \eqn{v = 1/d}. When \eqn{d > 0}, the probability mass function
-#' is (when `scale_ratio` takes the default value of zero)
+#' Let \eqn{v = 1/d}. When \eqn{d > 0} and `scale_ratio` takes the default value of zero, the probability mass function
+#' is
 #' \deqn{
 #' Pr(Y=y) = \Gamma(v + y) / (y! \Gamma(v))
 #'     (v / (v + r x))^v
 #'     ((r x) / (v + r x))^y
 #' }
-#' When \eqn{d=0}, the distribution reduces to the Poisson distribution,
-#' so that the probability mass function is
-#' \deqn{
-#' Pr(Y=y) = (1/(y!)) e^(-rx) (rx)^y
-#' }
+#' When \eqn{d=0}, the distribution theoretically reduces to the Poisson distribution.
+#' However, within dpmaccount, \eqn{d=0} is currently not allowed for the negative binomial
+#' datamodel and an error is returned.
+#' For dispersion only the following values are acceptable \eqn{d > 1e-6}.
+#'
 #'
 #' When `scale_ratio` is greater than zero the data model becomes
 #' \deqn{
@@ -782,7 +782,7 @@ new_datamod_t <- function(data,
 #'
 #' @param data A data frame
 #' @param ratio A single number, or a data frame. (Default is 1.).
-#' @param disp A single number, or a data frame with a variable called \code{"disp"}. (Default is 1.)
+#' @param disp A single number, or a data frame with a variable called \code{"disp"}. (Default is 1. Must be greater than 1e-6)
 #' @param scale_ratio A non-negative number. (Default is 0).
 #' @param nm_data Name of the dataset.
 #' @param nm_series Name of the demographic series that the data refers to.
@@ -878,7 +878,7 @@ datamod_nbinom <- function(data,
   }
   if (is.numeric(disp)) {
     checkmate::assert_number(disp,
-      lower = 0,
+      lower = 1e-6,
       finite = TRUE
     )
   } else if (is.data.frame(disp)) {
@@ -889,6 +889,17 @@ datamod_nbinom <- function(data,
       data = data,
       is_popn = is_popn
     )
+    is_pos <- disp$disp > 0
+    i_nonpos <- match(FALSE, is_pos, nomatch = 0L)
+    if (i_nonpos > 0L) {
+      stop(
+        gettextf(
+          "non-positive value [%s] for variable '%s' : row %d of data frame '%s' in data model for dataset \'%s\'",
+          disp$disp[[i_nonpos]], "disp", i_nonpos, "disp", nm_data
+        ),
+        call. = FALSE
+      )
+    }
   } else {
     stop(
       gettextf(
@@ -971,7 +982,7 @@ new_datamod_nbinom <- function(data,
 #' #' When `scale_ratio` takes the default value of zero, the Poisson distribution
 #' has probability mass function
 #' \deqn{
-#' Pr(X=k) = (1/(k!)) e^(-\lambda) (\lambda)^k
+#' Pr(X=k) = (1/(k!)) exp(-\lambda) (\lambda)^k
 #' } and density
 #' \deqn{
 #' p(x|\lambda) = \lambda^x exp(-\lambda)/x!
@@ -980,15 +991,15 @@ new_datamod_nbinom <- function(data,
 #'
 #' When `scale_ratio` is greater than zero the data model becomes
 #' \deqn{
-#' p(x|\lambda) = \lambda^x exp(-\lambda)/x!
+#' p(x|\lambda) = \lambda^{\alpha_{c_{i}} x} exp(-\lambda)/(\alpha_{c_{i}} x)!
 #' }
-#'  \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
+#'  \deqn{\alpha_{c_{i}} \sim \mathcal{N}(0, A_{\alpha_{c_{i}}}^2)}
 #'
 #' - \eqn{c_i} is the cohort associated with cell \eqn{i},
 #' - \eqn{\alpha_c} is multiplier applied to the coverage
 #'   ratio for cohort \eqn{c}
 #'
-#' In the extended model, \eqn{\alpha_c}
+#' In the extended model, \eqn{\alpha_{c_{i}}}
 #' is treated as unknown, and is estimated
 #' when [estimate_account()] is called.
 #'

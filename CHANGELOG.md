@@ -1,3 +1,29 @@
+# Pre-release changes/updates
+
+# dpmaccount 0.3.0
+
+-  Fixed indexing discrepancy between exposure and flows in cpp code. 
+   Significant fix as this has effects on estimates and simulations, especially in 
+   high migration cohorts.
+
+- Modified `estimate_account()` to create a seed_list for each cohort independently 
+  rather than a single seed_list for all cohorts, to prevent spurious correlations 
+  between cohorts.
+
+- Modified `components.dpmaccount_results()` to use the extended cohort-based seed_list.
+
+- Added a utility function `convert_old_dpmaccount_results()` to allow dpmaccount_results objects created pre-v0.2.0 to be updated to use the cohort-level seed_list allowing them to work with the updated `components.dpmaccount_results()` methods (`augment_population()`, `augment_events()`, `augment_rates()`). 
+
+- Added functionality to draw from the posterior predictive distributions.
+
+- Added a check to `datamod_nbinom()` to catch negative, or zero dispersions in disp dataframes and throw an error message if any are detected. 
+
+-  Modified check_sysmod function to allow for cohort-period specification of 
+   sysmods with cohort-time subsetting for 'births' that is currently allowed 
+   in the age-period specification (restricting the ages of mothers to 
+   reasonable ranges).
+
+
 # dpmaccount 0.2.0
 
 Second release of initial package development.

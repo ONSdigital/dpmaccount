@@ -11,39 +11,80 @@
 new_codatamod_norm <- function(args) {
   scale_ratio <- args$scale_ratio[[1L]] ## values all same - take first
   scale_sd <- args$scale_sd[[1L]] ## values all same - take first
-  if ((scale_ratio > 0) || (scale_sd > 0)) {
-    ans <- list(
-      i_mod = 101L,
-      data = args$data,
-      is_obs = args$is_obs,
-      ratio = args$ratio,
-      sd = args$sd,
-      scale_ratio = scale_ratio,
-      scale_sd = scale_sd,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c(
-      "dpmaccount_codatamod_norm_haspar",
-      "dpmaccount_codatamod_norm",
-      "dpmaccount_codatamod"
-    )
+  post_pred <- "data_tilde" %in% names(args)
+  if (post_pred) {
+    if ((scale_ratio > 0) || (scale_sd > 0)) {
+      ans <- list(
+        i_mod = 101L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        scale_ratio = scale_ratio,
+        scale_sd = scale_sd,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_norm_haspar",
+        "dpmaccount_codatamod_norm",
+        "dpmaccount_codatamod"
+      )
+    } else {
+      ans <- list(
+        i_mod = 1L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_norm_nopar",
+        "dpmaccount_codatamod_norm",
+        "dpmaccount_codatamod"
+      )
+    }
   } else {
-    ans <- list(
-      i_mod = 1L,
-      data = args$data,
-      is_obs = args$is_obs,
-      ratio = args$ratio,
-      sd = args$sd,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c(
-      "dpmaccount_codatamod_norm_nopar",
-      "dpmaccount_codatamod_norm",
-      "dpmaccount_codatamod"
-    )
+    if ((scale_ratio > 0) || (scale_sd > 0)) {
+      ans <- list(
+        i_mod = 101L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        scale_ratio = scale_ratio,
+        scale_sd = scale_sd,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_norm_haspar",
+        "dpmaccount_codatamod_norm",
+        "dpmaccount_codatamod"
+      )
+    } else {
+      ans <- list(
+        i_mod = 1L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_norm_nopar",
+        "dpmaccount_codatamod_norm",
+        "dpmaccount_codatamod"
+      )
+    }
   }
+
+
   ans
 }
 
@@ -57,31 +98,63 @@ new_codatamod_norm <- function(args) {
 #' @noRd
 new_codatamod_t <- function(args) {
   scale_ratio <- args$scale_ratio[[1L]] ## values all same - take first value
-  if (scale_ratio > 0) {
-    ans <- list(
-      i_mod = 201L,
-      data = args$data,
-      is_obs = args$is_obs,
-      df = args$df[[1L]], ## values all same - take first
-      ratio = args$ratio,
-      scale = args$scale,
-      scale_ratio = scale_ratio,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c("dpmaccount_codatamod_t_haspar", "dpmaccount_codatamod_t", "dpmaccount_codatamod")
+  post_pred <- "data_tilde" %in% names(args)
+  if (post_pred) {
+    if (scale_ratio > 0) {
+      ans <- list(
+        i_mod = 201L,
+        data = args$data,
+        is_obs = args$is_obs,
+        df = args$df[[1L]], ## values all same - take first
+        ratio = args$ratio,
+        scale = args$scale,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c("dpmaccount_codatamod_t_haspar", "dpmaccount_codatamod_t", "dpmaccount_codatamod")
+    } else {
+      ans <- list(
+        i_mod = 2L,
+        data = args$data,
+        is_obs = args$is_obs,
+        df = args$df[[1L]], ## values all same - take first
+        ratio = args$ratio,
+        scale = args$scale,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c("dpmaccount_codatamod_t_nopar", "dpmaccount_codatamod_t", "dpmaccount_codatamod")
+    }
   } else {
-    ans <- list(
-      i_mod = 2L,
-      data = args$data,
-      is_obs = args$is_obs,
-      df = args$df[[1L]], ## values all same - take first
-      ratio = args$ratio,
-      scale = args$scale,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c("dpmaccount_codatamod_t_nopar", "dpmaccount_codatamod_t", "dpmaccount_codatamod")
+    if (scale_ratio > 0) {
+      ans <- list(
+        i_mod = 201L,
+        data = args$data,
+        is_obs = args$is_obs,
+        df = args$df[[1L]], ## values all same - take first
+        ratio = args$ratio,
+        scale = args$scale,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c("dpmaccount_codatamod_t_haspar", "dpmaccount_codatamod_t", "dpmaccount_codatamod")
+    } else {
+      ans <- list(
+        i_mod = 2L,
+        data = args$data,
+        is_obs = args$is_obs,
+        df = args$df[[1L]], ## values all same - take first
+        ratio = args$ratio,
+        scale = args$scale,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c("dpmaccount_codatamod_t_nopar", "dpmaccount_codatamod_t", "dpmaccount_codatamod")
+    }
   }
   ans
 }
@@ -97,29 +170,59 @@ new_codatamod_t <- function(args) {
 #' @noRd
 new_codatamod_nbinom <- function(args) {
   scale_ratio <- args$scale_ratio[[1L]] ## values all same - take first value
-  if (scale_ratio > 0) {
-    ans <- list(
-      i_mod = 301L,
-      data = args$data,
-      is_obs = args$is_obs,
-      ratio = args$ratio,
-      disp = args$disp,
-      scale_ratio = scale_ratio,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c("dpmaccount_codatamod_nbinom_haspar", "dpmaccount_codatamod_nbinom", "dpmaccount_codatamod")
+  post_pred <- "data_tilde" %in% names(args)
+  if (post_pred) {
+    if (scale_ratio > 0) {
+      ans <- list(
+        i_mod = 301L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        disp = args$disp,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c("dpmaccount_codatamod_nbinom_haspar", "dpmaccount_codatamod_nbinom", "dpmaccount_codatamod")
+    } else {
+      ans <- list(
+        i_mod = 3L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        disp = args$disp,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c("dpmaccount_codatamod_nbinom_nopar", "dpmaccount_codatamod_nbinom", "dpmaccount_codatamod")
+    }
   } else {
-    ans <- list(
-      i_mod = 3L,
-      data = args$data,
-      is_obs = args$is_obs,
-      ratio = args$ratio,
-      disp = args$disp,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c("dpmaccount_codatamod_nbinom_nopar", "dpmaccount_codatamod_nbinom", "dpmaccount_codatamod")
+    if (scale_ratio > 0) {
+      ans <- list(
+        i_mod = 301L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        disp = args$disp,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c("dpmaccount_codatamod_nbinom_haspar", "dpmaccount_codatamod_nbinom", "dpmaccount_codatamod")
+    } else {
+      ans <- list(
+        i_mod = 3L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        disp = args$disp,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c("dpmaccount_codatamod_nbinom_nopar", "dpmaccount_codatamod_nbinom", "dpmaccount_codatamod")
+    }
   }
   ans
 }
@@ -134,27 +237,55 @@ new_codatamod_nbinom <- function(args) {
 #' @noRd
 new_codatamod_poisson <- function(args) {
   scale_ratio <- args$scale_ratio[[1L]] ## values all same - take first value
-  if (scale_ratio > 0) {
-    ans <- list(
-      i_mod = 401L,
-      data = args$data,
-      is_obs = args$is_obs,
-      ratio = args$ratio,
-      scale_ratio = scale_ratio,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c("dpmaccount_codatamod_poisson_haspar", "dpmaccount_codatamod_poisson", "dpmaccount_codatamod")
+  post_pred <- "data_tilde" %in% names(args)
+  if (post_pred) {
+    if (scale_ratio > 0) {
+      ans <- list(
+        i_mod = 401L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c("dpmaccount_codatamod_poisson_haspar", "dpmaccount_codatamod_poisson", "dpmaccount_codatamod")
+    } else {
+      ans <- list(
+        i_mod = 4L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c("dpmaccount_codatamod_poisson_nopar", "dpmaccount_codatamod_poisson", "dpmaccount_codatamod")
+    }
   } else {
-    ans <- list(
-      i_mod = 4L,
-      data = args$data,
-      is_obs = args$is_obs,
-      ratio = args$ratio,
-      time = args$time,
-      age = args$age
-    )
-    class(ans) <- c("dpmaccount_codatamod_poisson_nopar", "dpmaccount_codatamod_poisson", "dpmaccount_codatamod")
+    if (scale_ratio > 0) {
+      ans <- list(
+        i_mod = 401L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c("dpmaccount_codatamod_poisson_haspar", "dpmaccount_codatamod_poisson", "dpmaccount_codatamod")
+    } else {
+      ans <- list(
+        i_mod = 4L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c("dpmaccount_codatamod_poisson_nopar", "dpmaccount_codatamod_poisson", "dpmaccount_codatamod")
+    }
   }
   ans
 }

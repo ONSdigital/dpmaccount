@@ -28,7 +28,7 @@ reported and true population counts is represented by a Poisson distribution.
 #' When \code{scale_ratio} takes the default value of zero, the Poisson distribution
 has probability mass function
 \deqn{
-Pr(X=k) = (1/(k!)) e^(-\lambda) (\lambda)^k
+Pr(X=k) = (1/(k!)) exp(-\lambda) (\lambda)^k
 } and density
 \deqn{
 p(x|\lambda) = \lambda^x exp(-\lambda)/x!
@@ -36,16 +36,16 @@ p(x|\lambda) = \lambda^x exp(-\lambda)/x!
 
 When \code{scale_ratio} is greater than zero the data model becomes
 \deqn{
-p(x|\lambda) = \lambda^x exp(-\lambda)/x!
+p(x|\lambda) = \lambda^{\alpha_{c_{i}} x} exp(-\lambda)/(\alpha_{c_{i}} x)!
 }
-\deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
+\deqn{\alpha_{c_{i}} \sim \mathcal{N}(0, A_{\alpha_{c_{i}}}^2)}
 \itemize{
 \item \eqn{c_i} is the cohort associated with cell \eqn{i},
 \item \eqn{\alpha_c} is multiplier applied to the coverage
 ratio for cohort \eqn{c}
 }
 
-In the extended model, \eqn{\alpha_c}
+In the extended model, \eqn{\alpha_{c_{i}}}
 is treated as unknown, and is estimated
 when \code{\link[=estimate_account]{estimate_account()}} is called.
 }

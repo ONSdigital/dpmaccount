@@ -306,24 +306,24 @@ summary(results)
 #>  --- population ---
 #> 
 #>   time population
-#> 1 2019      56240
-#> 2 2020      56533
-#> 3 2021      56571
-#> 4 2022      56466
+#> 1 2019      56231
+#> 2 2020      56525
+#> 3 2021      56566
+#> 4 2022      56463
 #> 
 #>  --- events ---
 #> 
 #>   time births deaths  ins outs
 #> 1 2020    835    521 2090 2108
-#> 2 2021    761    531 2125 2315
-#> 3 2022    746    525 2196 2520
+#> 2 2021    761    531 2127 2313
+#> 3 2022    746    525 2196 2519
 #> 
 #>  --- rates ---
 #> 
 #>   time births  deaths  ins   outs
-#> 1 2020 0.0149 0.00957 1990 0.0363
-#> 2 2021 0.0134 0.00947 2040 0.0394
-#> 3 2022 0.0132 0.00972 2110 0.0433
+#> 1 2020 0.0148 0.00954 1990 0.0360
+#> 2 2021 0.0135 0.00952 2040 0.0396
+#> 3 2022 0.0132 0.00959 2100 0.0433
 ```
 
 Function `diagnostics()` provides information on the performance of the
@@ -335,10 +335,10 @@ head(diag, 5)
 #> # A tibble: 5 × 10
 #>   cohort sex    nlminb_res nlminb_conv nlminb_msg       logpost var_nona var_pos
 #>    <int> <chr>  <lgl>      <lgl>       <chr>              <dbl> <lgl>    <lgl>  
-#> 1   1917 Female TRUE       TRUE        both X-converge…   -8.88 TRUE     TRUE   
-#> 2   1917 Male   TRUE       TRUE        both X-converge…   -8.91 TRUE     TRUE   
-#> 3   1918 Female TRUE       TRUE        both X-converge…  -25.0  TRUE     TRUE   
-#> 4   1918 Male   TRUE       TRUE        both X-converge…  -25.0  TRUE     TRUE   
+#> 1   1917 Female TRUE       TRUE        both X-converge…   -8.89 TRUE     TRUE   
+#> 2   1917 Male   TRUE       TRUE        relative conver…   -8.91 TRUE     TRUE   
+#> 3   1918 Female TRUE       TRUE        relative conver…  -25.0  TRUE     TRUE   
+#> 4   1918 Male   TRUE       TRUE        relative conver…  -25.0  TRUE     TRUE   
 #> 5   1919 Female TRUE       TRUE        relative conver…  -40.8  TRUE     TRUE   
 #> # ℹ 2 more variables: var_nearpos <lgl>, success <lgl>
 ```
@@ -372,11 +372,11 @@ head(res_population, 5)
 #> # A tibble: 5 × 9
 #>   cohort sex     time   age gl_report_popn population    population.fitted
 #>    <int> <chr>  <int> <int>          <dbl> <list>                    <dbl>
-#> 1   1917 Female  2019   102              0 <dbl [1,000]>             1.16 
-#> 2   1917 Male    2019   102              0 <dbl [1,000]>             1.12 
-#> 3   1918 Female  2019   101              0 <dbl [1,000]>             0.840
-#> 4   1918 Female  2020   102              0 <dbl [1,000]>             0.974
-#> 5   1918 Male    2019   101              0 <dbl [1,000]>             0.808
+#> 1   1917 Female  2019   102              0 <dbl [1,000]>             1.23 
+#> 2   1917 Male    2019   102              0 <dbl [1,000]>             1.16 
+#> 3   1918 Female  2019   101              0 <dbl [1,000]>             0.882
+#> 4   1918 Female  2020   102              0 <dbl [1,000]>             1.03 
+#> 5   1918 Male    2019   101              0 <dbl [1,000]>             0.866
 #> # ℹ 2 more variables: population.lower <dbl>, population.upper <dbl>
 ```
 
@@ -418,14 +418,14 @@ results %>%
 #> # A tibble: 8 × 7
 #>   sex     time gl_report_popn population    population.fitted population.lower
 #>   <chr>  <int>          <dbl> <list>                    <dbl>            <dbl>
-#> 1 Female  2019          26530 <dbl [1,000]>            26578.           25989.
-#> 2 Female  2020          26672 <dbl [1,000]>            26706.           26125.
-#> 3 Female  2021          26759 <dbl [1,000]>            26767.           26189.
-#> 4 Female  2022          26738 <dbl [1,000]>            26699.           26115.
-#> 5 Male    2019          29551 <dbl [1,000]>            29662.           28955.
-#> 6 Male    2020          29749 <dbl [1,000]>            29827.           29125.
-#> 7 Male    2021          29803 <dbl [1,000]>            29804.           29117.
-#> 8 Male    2022          29871 <dbl [1,000]>            29767.           29063.
+#> 1 Female  2019          26530 <dbl [1,000]>            26575.           26499.
+#> 2 Female  2020          26672 <dbl [1,000]>            26703.           26628.
+#> 3 Female  2021          26759 <dbl [1,000]>            26766.           26687.
+#> 4 Female  2022          26738 <dbl [1,000]>            26698.           26608.
+#> 5 Male    2019          29551 <dbl [1,000]>            29656.           29562.
+#> 6 Male    2020          29749 <dbl [1,000]>            29822.           29735.
+#> 7 Male    2021          29803 <dbl [1,000]>            29801.           29712.
+#> 8 Male    2022          29871 <dbl [1,000]>            29765.           29673.
 #> # ℹ 1 more variable: population.upper <dbl>
 ```
 
@@ -545,11 +545,11 @@ head(rates_emig, 5)
 #> # A tibble: 5 × 7
 #>     age  time direct series fitted   lower  upper
 #>   <int> <int>  <dbl> <chr>   <dbl>   <dbl>  <dbl>
-#> 1     0  2022 0.0267 prior  0.0314 0.0102  0.0647
-#> 2     0  2022 0.0267 post   0.0303 0.0214  0.0416
-#> 3     1  2022 0.0429 prior  0.0361 0.0112  0.0746
-#> 4     1  2022 0.0429 post   0.0402 0.0300  0.0524
-#> 5    10  2022 0.0206 prior  0.0221 0.00719 0.0447
+#> 1     0  2022 0.0267 prior  0.0318 0.00987 0.0646
+#> 2     0  2022 0.0267 post   0.0302 0.0211  0.0401
+#> 3     1  2022 0.0429 prior  0.0366 0.0132  0.0761
+#> 4     1  2022 0.0429 post   0.0405 0.0301  0.0526
+#> 5    10  2022 0.0206 prior  0.0220 0.00739 0.0450
 ```
 
 ``` r
@@ -600,11 +600,11 @@ head(rates_immig, 5)
 #> # A tibble: 5 × 7
 #>     age  time direct series fitted lower upper
 #>   <int> <int>  <dbl> <chr>   <dbl> <dbl> <dbl>
-#> 1     0  2022     20 prior    23.0  7.47  47.4
-#> 2     0  2022     20 post     22.2 15.0   30.3
-#> 3     1  2022     29 prior    25.9  8.01  53.5
-#> 4     1  2022     29 post     28.3 20.7   38.0
-#> 5    10  2022     15 prior    12.7  4.14  25.7
+#> 1     0  2022     20 prior    23.3  7.27  45.2
+#> 2     0  2022     20 post     22.2 15.4   29.1
+#> 3     1  2022     29 prior    26.3  7.64  54.5
+#> 4     1  2022     29 post     27.9 20.2   36.2
+#> 5    10  2022     15 prior    12.4  4.31  25.6
 ```
 
 ``` r

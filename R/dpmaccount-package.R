@@ -4,6 +4,8 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @importFrom utils setTxtProgressBar
+#' @importFrom utils txtProgressBar
 #' @useDynLib dpmaccount, .registration = TRUE
 ## usethis namespace: end
 NULL

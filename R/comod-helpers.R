@@ -38,7 +38,8 @@
 components_cohort <- function(object,
                               what = "population",
                               n_draw = 1000L,
-                              seed_list) {
+                              seed_list,
+                              only_obs = TRUE) {
   choices <- c(
     "population",
     "events",
@@ -63,7 +64,8 @@ components_cohort <- function(object,
   what <- unique(what)
   account <- components_cohort_account(object,
     n_draw = n_draw,
-    seed_list = seed_list
+    seed_list = seed_list,
+    only_obs = only_obs
   )
   ans <- list()
   if ("population" %in% what) {
@@ -127,7 +129,7 @@ components_cohort <- function(object,
 #' and scalar 'propn_adjusted'.
 #'
 #' @noRd
-components_cohort_account <- function(object, n_draw, seed_list) {
+components_cohort_account <- function(object, n_draw, seed_list, only_obs = TRUE) {
   cohort <- object$cohort
   sex <- object$sex
   is_new_cohort <- object$is_new_cohort
@@ -164,13 +166,22 @@ components_cohort_account <- function(object, n_draw, seed_list) {
   val_outs <- counts$val_outs
   n_adj <- counts$n_adj
   ## make 'population'
+
   if (is_new_cohort) {
-    i_popn <- rep(c(TRUE, FALSE), length.out = K)
+    if (only_obs) {
+      i_popn <- rep(c(TRUE, FALSE), length.out = K)
+    } else {
+      i_popn <- rep(TRUE, length.out = K)
+    }
     population <- val_stk[i_popn, , drop = FALSE]
     time <- count_bthdth$time[i_popn]
     age <- count_bthdth$age[i_popn]
   } else {
-    i_popn <- rep(c(FALSE, TRUE), length.out = K)
+    if (only_obs) {
+      i_popn <- rep(c(FALSE, TRUE), length.out = K)
+    } else {
+      i_popn <- rep(TRUE, length.out = K)
+    }
     population <- rbind(
       val_stk_init,
       val_stk[i_popn, , drop = FALSE]
@@ -184,6 +195,7 @@ components_cohort_account <- function(object, n_draw, seed_list) {
       count_bthdth$age[i_popn]
     )
   }
+
   population <- matrix_to_list_rows(population)
   population <- tibble::tibble(
     time = time,
