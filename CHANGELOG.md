@@ -1,5 +1,12 @@
 # Pre-release changes/updates
 
+# accountTMB 0.3.1
+
+## New data model (log-normal - `datamod_lognorm()`)
+
+- Added a new (log-normal) data model `datamod_lognorm()`
+
+
 # dpmaccount 0.3.0
 
 -  Fixed indexing discrepancy between exposure and flows in cpp code. 

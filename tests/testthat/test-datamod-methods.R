@@ -377,3 +377,90 @@ test_that("'make_codatamod_df' works with datamod_poisson and events", {
     ans$datamod[[1]]
   )
 })
+
+test_that("'make_codatamod_df' works with datamod_lognorm and population", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "popdata"
+  mod <- datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  classif_vars <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2003,
+    triangle = 0:1
+  )
+  classif_vars$cohort <- with(classif_vars, time - age - triangle)
+  classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
+  ans <- make_codatamod_df(mod = mod, classif_vars = classif_vars)
+  expect_identical(names(ans), c("cohort", "sex", "nm_series", "nm_data", "datamod"))
+  expect_s3_class(ans$datamod[[1]], "dpmaccount_codatamod_lognorm")
+  expect_identical(
+    validate_codatamod_lognorm(ans$datamod[[1]]),
+    ans$datamod[[1]]
+  )
+  expect_identical(min(sapply(ans$datamod, function(x) min(x$time))), 1999L)
+})
+
+test_that("'make_codatamod_df' works with datamod_lognorm and events", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002,
+    triangle = 0:1
+  )
+  data$cohort <- with(data, time - age - triangle)
+  data$count <- seq_len(nrow(data))
+  data <- data[-match("triangle", names(data))]
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002,
+    triangle = 0:1
+  )
+  sd$cohort <- with(sd, time - age - triangle)
+  sd <- sd[, -match("triangle", names(sd))]
+  sd$sd <- 0.2
+  nm_series <- "ins"
+  nm_data <- "insdata"
+  mod <- datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  classif_vars <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2003,
+    triangle = 0:1
+  )
+  classif_vars$cohort <- with(classif_vars, time - age - triangle)
+  classif_vars <- classif_vars[-match("triangle", names(classif_vars))]
+  ans <- make_codatamod_df(mod = mod, classif_vars = classif_vars)
+  expect_identical(names(ans), c("cohort", "sex", "nm_series", "nm_data", "datamod"))
+  expect_s3_class(ans$datamod[[1]], "dpmaccount_codatamod_lognorm")
+  expect_identical(
+    validate_codatamod_lognorm(ans$datamod[[1]]),
+    ans$datamod[[1]]
+  )
+})

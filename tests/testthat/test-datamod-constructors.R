@@ -735,6 +735,226 @@ test_that("'datamod_nbinom' gives error with invalid inputs - negative dispersio
   )
 })
 
+## 'datamod_lognorm' -------------------------------------------------------------
+
+test_that("'datamod_lognorm' works with valid inputs - ratio is number, scale_ratio is 0", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+
+  data2 <- data
+
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "popdata"
+
+  data2$cohort <- with(data2, time - age)
+  ans_obtained <- datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+
+  data2 <- tibble::tibble(data2)
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_lognorm", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_lognorm")
+  expect_identical(ans_obtained, ans_expected)
+})
+
+test_that("'datamod_lognorm' works with valid inputs - ratio is number, scale_ratio is non-zero", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+
+  data2 <- data
+  data2$cohort <- with(data2, time - age)
+
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "popdata"
+  ans_obtained <- datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0.2,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+
+  data2 <- tibble::tibble(data2)
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0.2,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_lognorm", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_lognorm")
+  expect_identical(ans_obtained, ans_expected)
+})
+
+test_that("'datamod_lognorm' works with valid inputs - ratio is data frame", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+
+  data2 <- data
+  data2$cohort <- with(data2, time - age)
+
+  ratio <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  ratio$ratio <- 1.3
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "data"
+  ans_obtained <- datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    nm_series = nm_series
+  )
+
+  data2 <- tibble::tibble(data2)
+  ans_expected <- list(
+    data = data2,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans_expected) <- c("dpmaccount_datamod_lognorm", "dpmaccount_datamod")
+
+  expect_s3_class(ans_obtained, "dpmaccount_datamod_lognorm")
+  expect_identical(ans_obtained$nm_data, "data")
+  expect_identical(ans_obtained, ans_expected)
+})
+
+test_that("'datamod_lognorm' gives expected error when ratio invalid", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+  ratio <- NULL
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  expect_error(
+    datamod_lognorm(
+      data = data,
+      ratio = ratio,
+      sd = sd,
+      nm_series = nm_series
+    ),
+    "'ratio' has class \"NULL\""
+  )
+})
+
+test_that("'datamod_lognorm' gives expected error when sd non-positive", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  sd$sd[3] <- 0
+  nm_series <- "population"
+  expect_error(
+    datamod_lognorm(
+      data = data,
+      ratio = ratio,
+      sd = sd,
+      nm_series = nm_series
+    ),
+    "non-positive value \\[0\\] for variable 'sd' : row 3 of data frame 'sd' in data model for dataset \"data\""
+  )
+})
+
+test_that("'datamod_lognorm' gives expected error with invalid inputs - invalid 'sex' coding", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("female", "male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("female", "male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "popdata"
+  expect_error(
+    datamod_lognorm(
+      data = data,
+      ratio = ratio,
+      sd = sd,
+      scale_ratio = 0.2,
+      nm_series = nm_series,
+      nm_data = nm_data
+    ),
+    "problem with invalid coding for 'sex' in data frame 'data':"
+  )
+})
+
 ## 'new_datamod_exact' --------------------------------------------------------
 
 test_that("'new_datamod_exact' works with valid inputs", {
@@ -1102,4 +1322,62 @@ test_that("'datamod_poisson' creates 'nm_data' when not supplied", {
   )
   expect_s3_class(ans, c("dpmaccount_datamod_poisson", "dpmaccount_datamod"))
   expect_identical(ans$nm_data, "data")
+})
+
+## 'new_datamod_lognorm' ---------------------------------------------------------
+
+test_that("'new_datamod_lognorm' works with valid inputs - scale_ratio is 0", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "popdata"
+  ans <- new_datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  expect_s3_class(ans, "dpmaccount_datamod_lognorm")
+  expect_s3_class(ans, "dpmaccount_datamod")
+})
+
+test_that("'new_datamod_lognorm' works with valid inputs - scale_ratio is non-zero", {
+  data <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  data$count <- seq_len(nrow(data))
+  ratio <- 1
+  sd <- expand.grid(
+    age = 0:2,
+    sex = c("Female", "Male"),
+    time = 2000:2002
+  )
+  sd$sd <- 0.2
+  nm_series <- "population"
+  nm_data <- "popdata"
+  ans <- new_datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = 0.2,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  expect_s3_class(ans, "dpmaccount_datamod_lognorm")
+  expect_s3_class(ans, "dpmaccount_datamod")
 })

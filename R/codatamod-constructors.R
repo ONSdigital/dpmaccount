@@ -290,6 +290,88 @@ new_codatamod_poisson <- function(args) {
   ans
 }
 
+#' Create a new object of class "dpmaccount_codatamod_lognorm"
+#'
+#' @param args Arguments to the function.
+#'
+#' @return Object of class "dpmaccount_codatamod_lognorm"
+#'
+#' @noRd
+new_codatamod_lognorm <- function(args) {
+  scale_ratio <- args$scale_ratio[[1L]] ## values all same - take first
+  post_pred <- "data_tilde" %in% names(args)
+  if (post_pred) {
+    if ((scale_ratio > 0)) {
+      ans <- list(
+        i_mod = 501L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_lognorm_haspar",
+        "dpmaccount_codatamod_lognorm",
+        "dpmaccount_codatamod"
+      )
+    } else {
+      ans <- list(
+        i_mod = 5L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        time = args$time,
+        age = args$age,
+        data_tilde = args$data_tilde
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_lognorm_nopar",
+        "dpmaccount_codatamod_lognorm",
+        "dpmaccount_codatamod"
+      )
+    }
+  } else {
+    if ((scale_ratio > 0)) {
+      ans <- list(
+        i_mod = 501L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        scale_ratio = scale_ratio,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_lognorm_haspar",
+        "dpmaccount_codatamod_lognorm",
+        "dpmaccount_codatamod"
+      )
+    } else {
+      ans <- list(
+        i_mod = 5L,
+        data = args$data,
+        is_obs = args$is_obs,
+        ratio = args$ratio,
+        sd = args$sd,
+        time = args$time,
+        age = args$age
+      )
+      class(ans) <- c(
+        "dpmaccount_codatamod_lognorm_nopar",
+        "dpmaccount_codatamod_lognorm",
+        "dpmaccount_codatamod"
+      )
+    }
+  }
+  ans
+}
+
 ## 'validate' -----------------------------------------------------------------
 
 ## HAS_TESTS
@@ -470,6 +552,41 @@ validate_codatamod_poisson <- function(x) {
   checkmate::assert_double(ratio, lower = 0)
   ## 'ratio', NA only if 'data' NA
   for (nm in c("ratio")) {
+    val <- get(nm, x)
+    is_na <- is.na(val) & !is.na(data)
+    i_na <- match(TRUE, is_na, nomatch = 0L)
+    if (i_na > 0L) {
+      stop(
+        gettextf(
+          "element %d of '%s' is NA (and element %d of '%s' is not)",
+          i_na,
+          nm,
+          i_na,
+          "data"
+        ),
+        call. = FALSE
+      )
+    }
+  }
+  ## return
+  x
+}
+
+#' Checks specific to object of class "dpmaccount_codatamod_lognorm"
+#'
+#' @param x An object of class "dpmaccount_codatamod_lognorm"
+#'
+#' @returns x
+#'
+#' @noRd
+validate_codatamod_lognorm <- function(x) {
+  data <- x$data
+  ratio <- x$ratio
+  sd <- x$sd
+  checkmate::assert_double(ratio, lower = 0)
+  checkmate::assert_double(sd, lower = 0)
+  ## 'ratio', 'sd' NA only if 'data' NA
+  for (nm in c("ratio", "sd")) {
     val <- get(nm, x)
     is_na <- is.na(val) & !is.na(data)
     i_na <- match(TRUE, is_na, nomatch = 0L)
