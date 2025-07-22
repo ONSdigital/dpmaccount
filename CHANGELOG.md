@@ -1,5 +1,7 @@
 # Pre-release changes/updates
 
+- Updated contributing guidance.
+
 # dpmaccount 0.3.0
 
 -  Fixed indexing discrepancy between exposure and flows in cpp code. 

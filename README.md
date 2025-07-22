@@ -31,8 +31,13 @@ the information needed to generate estimates of counts and rates.
 **To see the complete [contributor
 guidance](https://github.com/ONSdigital/dpmaccount/blob/main/CONTRIBUTING.md)**
 
-**In brief:** All modifications to this package must be made through
-**Pull requests**, ideally linked to a specific GitHub **Issue**.
+**In brief:** Contributors with write access to this repository should
+create and make changes on a feature branch. Contributors without write
+access should fork this repository to their own GitHub account and make
+changes on a new branch.
+
+All modifications to this package must be made through **Pull
+requests**, ideally linked to a specific GitHub **Issue**.
 
 Pull requests must be reviewed by someone other than the requester, if
 more than one individual was responsible for the requested changes the
@@ -545,11 +550,11 @@ head(rates_emig, 5)
 #> # A tibble: 5 × 7
 #>     age  time direct series fitted   lower  upper
 #>   <int> <int>  <dbl> <chr>   <dbl>   <dbl>  <dbl>
-#> 1     0  2022 0.0267 prior  0.0318 0.00987 0.0646
+#> 1     0  2022 0.0267 prior  0.0306 0.0102  0.0628
 #> 2     0  2022 0.0267 post   0.0302 0.0211  0.0401
-#> 3     1  2022 0.0429 prior  0.0366 0.0132  0.0761
+#> 3     1  2022 0.0429 prior  0.0360 0.0120  0.0727
 #> 4     1  2022 0.0429 post   0.0405 0.0301  0.0526
-#> 5    10  2022 0.0206 prior  0.0220 0.00739 0.0450
+#> 5    10  2022 0.0206 prior  0.0217 0.00720 0.0436
 ```
 
 ``` r
@@ -600,11 +605,11 @@ head(rates_immig, 5)
 #> # A tibble: 5 × 7
 #>     age  time direct series fitted lower upper
 #>   <int> <int>  <dbl> <chr>   <dbl> <dbl> <dbl>
-#> 1     0  2022     20 prior    23.3  7.27  45.2
+#> 1     0  2022     20 prior    22.7  7.29  46.6
 #> 2     0  2022     20 post     22.2 15.4   29.1
-#> 3     1  2022     29 prior    26.3  7.64  54.5
+#> 3     1  2022     29 prior    26.4  8.64  54.7
 #> 4     1  2022     29 post     27.9 20.2   36.2
-#> 5    10  2022     15 prior    12.4  4.31  25.6
+#> 5    10  2022     15 prior    12.4  4.16  25.1
 ```
 
 ``` r
