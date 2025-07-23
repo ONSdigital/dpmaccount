@@ -103,11 +103,11 @@ Type logpost_nopar_lognorm(vector<Type> data,
   Type ans = 0;
   for (int i = 0; i < n; i++) {
     if (is_obs[i]) {
-      Type y = log(data[i]);
-      Type x = log(val[i]);
+      Type x = log(data[i]);
+      Type y = log(val[i]);
       Type mu = log(ratio[i]); 
       
-      ans -= ((y - x - mu) * (y - x - mu)) / (2 * (sd[i] * sd[i]));
+      ans -= ((x - y - mu) * (x - y - mu)) / (2 * (sd[i] * sd[i]));
     }
   }
   return ans;
@@ -308,11 +308,11 @@ Type logpost_par_lognorm(vector<Type> data,
   
   for (int i = 0; i < n; i++) {
     if (is_obs[i]) {
-      Type y = log(data[i]);
-      Type x = log(val[i]);
+      Type x = log(data[i]);
+      Type y = log(val[i]);
       Type mu = log(ratio[i]); 
       
-      ans -= ((y - x - mu - mult_ratio) * (y - x - mu - mult_ratio)) / (2 * (sd[i] * sd[i]));
+      ans -= ((x - y - mu - mult_ratio) * (x - y - mu - mult_ratio)) / (2 * (sd[i] * sd[i]));
     }
   }
   return ans;
