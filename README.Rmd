@@ -33,6 +33,8 @@ The dpmaccount package provides a framework for estimating a demographic account
 **To see the complete [contributor guidance](https://github.com/ONSdigital/dpmaccount/blob/main/CONTRIBUTING.md)**
 
 **In brief:**
+Contributors with write access to this repository should create and make changes on a feature branch. Contributors without write access should fork this repository to their own GitHub account and make changes on a new branch.
+
 All modifications to this package must be made through **Pull requests**, ideally linked to a specific GitHub **Issue**. 
 
 Pull requests must be reviewed by someone other than the requester, if more than one individual was responsible for the requested changes the reviewer must be someone other than the main contributor, ideally it will be reviewed by someone entirely uninvolved with the particular changes made. 

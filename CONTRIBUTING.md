@@ -40,10 +40,18 @@ Additional labels for pre-release and build metadata are available as extensions
 
 
 #### Branching
-
+ 
+If you have write access to this repository:
+ 
 - Branch the repo and create your **`feature`** branch from **`main`**.
-- Use the branch for a specific feature/bug, with an informative name (if possible including a reference to a GitHub issue number) 
-- Only use the branch for the initial purpose it was created for (don't use for continuous/subsequent development)
+- Use the branch for a specific feature/bug, with an informative name (if possible including a reference to a GitHub issue number).
+- Only use the branch for the initial purpose it was created for (avoid using it for unrelated or ongoing development).
+ 
+If you do **not** have write access:
+ 
+- Fork the repository to your own GitHub account.
+- Create a **`feature`** branch in your fork from **`main`**.
+- Submit a pull request from your forked branch to the **`main`** branch of this repository.
 
 #### Commit messages
 
