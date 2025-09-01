@@ -1203,7 +1203,7 @@ new_datamod_poisson <- function(data,
 #' - \eqn{\mu} is the net coverage ratio for cell \eqn{i}
 #' - \eqn{\sigma_i} is the standard deviation for cell \eqn{i}
 #' - \eqn{s} is the s-th sample drawn from the posterior distribution during estimation.
-#' 
+#'
 #' When `scale_ratio` is greater than `0`,
 #' the data model becomes
 #'
