@@ -439,12 +439,6 @@ get_nms_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
 
 ## HAS_TESTS
 #' @export
-get_nms_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
-  character()
-}
-
-## HAS_TESTS
-#' @export
 get_nms_par.dpmaccount_codatamod_lognorm_haspar <- function(x) {
   has_mult_ratio <- x$scale_ratio > 0
   ans <- character()

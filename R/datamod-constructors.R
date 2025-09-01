@@ -1193,7 +1193,7 @@ new_datamod_poisson <- function(data,
 #'
 #' which results in a log-posterior contribution of
 #'
-#' \deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)})^2}{2 (\sigma^{(s)})^2})}
+#' \deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)})^2}{2 (\sigma^{(s)})^2}}
 #'
 #' where
 #'
@@ -1202,11 +1202,12 @@ new_datamod_poisson <- function(data,
 #' - \eqn{y_i} is the observed count for cell \eqn{i}
 #' - \eqn{\mu} is the net coverage ratio for cell \eqn{i}
 #' - \eqn{\sigma_i} is the standard deviation for cell \eqn{i}
-#'
+#' - \eqn{s} is the s-th sample drawn from the posterior distribution during estimation.
+#' 
 #' When `scale_ratio` is greater than `0`,
 #' the data model becomes
 #'
-#' \deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)} - {\alpha_{c_i}})^2}{2 (\sigma^{(s)})^2})}
+#' \deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)} - {\alpha_{c_i}})^2}{2 (\sigma^{(s)})^2}}
 #' \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
 #'
 #' where
@@ -1255,7 +1256,7 @@ new_datamod_poisson <- function(data,
 #' then different coverage rates are used for
 #' different parts of the data.
 #' If a classifying variable in `data` is
-#' omitted from `ratio`,  then the coverage ratio
+#' omitted from `ratio`, then the coverage ratio
 #' is assumed to be constant
 #' across all levels of the omitted variable.
 #' Data frame `ratio` must have a column called `ratio`.

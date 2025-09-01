@@ -46,7 +46,7 @@ probability density function
 
 which results in a log-posterior contribution of
 
-\deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)})^2}{2 (\sigma^{(s)})^2})}
+\deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)})^2}{2 (\sigma^{(s)})^2}}
 
 where
 \itemize{
@@ -55,12 +55,13 @@ where
 \item \eqn{y_i} is the observed count for cell \eqn{i}
 \item \eqn{\mu} is the net coverage ratio for cell \eqn{i}
 \item \eqn{\sigma_i} is the standard deviation for cell \eqn{i}
+\item \eqn{s} is the s-th sample drawn from the posterior distribution during estimation.
 }
 
 When \code{scale_ratio} is greater than \code{0},
 the data model becomes
 
-\deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)} - {\alpha_{c_i}})^2}{2 (\sigma^{(s)})^2})}
+\deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)} - {\alpha_{c_i}})^2}{2 (\sigma^{(s)})^2}}
 \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
 
 where
@@ -115,7 +116,7 @@ the data. If \code{ratio} is a data frame,
 then different coverage rates are used for
 different parts of the data.
 If a classifying variable in \code{data} is
-omitted from \code{ratio},  then the coverage ratio
+omitted from \code{ratio}, then the coverage ratio
 is assumed to be constant
 across all levels of the omitted variable.
 Data frame \code{ratio} must have a column called \code{ratio}.
