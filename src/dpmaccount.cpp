@@ -5,7 +5,6 @@
 
 using namespace Eigen;
 using namespace tmbutils;
-using atomic::tiny_ad::isfinite; // copied from adcomp/tmb_examples/adaptive_integration.cpp
 
 
 // Functions for calculating log-posterior ------------------------------------
@@ -425,7 +424,7 @@ Type objective_function<Type>::operator() ()
   vector<Type> val_ins = exp(log_val_ins);
   vector<Type> val_outs = exp(log_val_outs);
   int sd_stk_init_positive = sd_stk_init > 0;
-  int sd_stk_init_finite = isfinite(sd_stk_init);
+  int sd_stk_init_finite = CppAD::isfinite(sd_stk_init);
 
   vector<vector<Type> > data_split_stk = split(data_all_stk, idx_data_all_stk);       
   vector<vector<Type> > data_split_ins = split(data_all_ins, idx_data_all_ins);       
