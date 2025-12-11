@@ -319,7 +319,6 @@ test_that("'validate_codatamod_t' throws expected error when 'scale' is NA", {
 })
 
 
-
 ## 'validate_codatamod_nbinom' ---------------------------------------------
 
 test_that("'validate_codatamod_nbinom' works with valid inputs", {
