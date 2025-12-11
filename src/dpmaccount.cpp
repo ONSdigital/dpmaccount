@@ -5,7 +5,6 @@
 
 using namespace Eigen;
 using namespace tmbutils;
-using atomic::tiny_ad::isfinite; // copied from adcomp/tmb_examples/adaptive_integration.cpp
 
 
 // Functions for calculating log-posterior ------------------------------------
@@ -91,6 +90,29 @@ Type logpost_nopar_poisson(vector<Type> data,
 }
 
 template <class Type>
+Type logpost_nopar_lognorm(vector<Type> data,
+                           vector<Type> val,
+                           vector<int> is_obs,
+                           vector<Type> consts) {
+  
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  vector<Type> sd = consts.segment(n, n);
+  
+  Type ans = 0;
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      Type x = log(data[i]);
+      Type y = log(val[i]);
+      Type mu = log(ratio[i]); 
+      
+      ans -= ((x - y - mu) * (x - y - mu)) / (2 * (sd[i] * sd[i]));
+    }
+  }
+  return ans;
+}
+
+template <class Type>
 Type logpost_nopar(vector<Type> data,
 		   vector<Type> val,
 		   vector<int> is_obs,
@@ -109,6 +131,9 @@ Type logpost_nopar(vector<Type> data,
     break;
   case 4:
     ans = logpost_nopar_poisson(data, val, is_obs, consts);
+    break;
+  case 5:
+    ans = logpost_nopar_lognorm(data, val, is_obs, consts);
     break;
   default:
     error("function 'logpost_nopar' cannot handle i_mod = %d", i_mod);
@@ -259,6 +284,40 @@ Type logpost_par_poisson(vector<Type> data,
 }
 
 template <class Type>
+Type logpost_par_lognorm(vector<Type> data,
+                         vector<Type> val,
+                         vector<int> is_obs,
+                         vector<Type> par,
+                         vector<Type> consts) {
+  int n = data.size();
+  vector<Type> ratio = consts.segment(0, n);
+  vector<Type> sd = consts.segment(n, n);
+  Type scale_mult_ratio = consts[2 * n];
+  bool has_mult_ratio = scale_mult_ratio > 0;
+  Type mult_ratio;
+  if (has_mult_ratio) {
+    mult_ratio = par[0];
+  }
+  else {
+    mult_ratio = 0;
+  }
+  Type ans = 0;
+  if (has_mult_ratio)
+    ans += dnorm(mult_ratio, Type(0), scale_mult_ratio, true);
+  
+  for (int i = 0; i < n; i++) {
+    if (is_obs[i]) {
+      Type x = log(data[i]);
+      Type y = log(val[i]);
+      Type mu = log(ratio[i]); 
+      
+      ans -= ((x - y - mu - mult_ratio) * (x - y - mu - mult_ratio)) / (2 * (sd[i] * sd[i]));
+    }
+  }
+  return ans;
+}
+
+template <class Type>
 Type logpost_haspar(vector<Type> data,
 		    vector<Type> val,
 		    vector<int> is_obs,
@@ -278,6 +337,9 @@ Type logpost_haspar(vector<Type> data,
     break;
   case 401:
     ans = logpost_par_poisson(data, val, is_obs, par, consts);
+    break;
+  case 501:
+    ans = logpost_par_lognorm(data, val, is_obs, par, consts);
     break;
   default:
     error("function 'logpost_haspar' cannot handle i_mod = %d", i_mod);
@@ -362,7 +424,7 @@ Type objective_function<Type>::operator() ()
   vector<Type> val_ins = exp(log_val_ins);
   vector<Type> val_outs = exp(log_val_outs);
   int sd_stk_init_positive = sd_stk_init > 0;
-  int sd_stk_init_finite = isfinite(sd_stk_init);
+  int sd_stk_init_finite = CppAD::isfinite(sd_stk_init);
 
   vector<vector<Type> > data_split_stk = split(data_all_stk, idx_data_all_stk);       
   vector<vector<Type> > data_split_ins = split(data_all_ins, idx_data_all_ins);       

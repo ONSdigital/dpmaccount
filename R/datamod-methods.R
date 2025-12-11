@@ -277,6 +277,54 @@ make_codatamod_df.dpmaccount_datamod_poisson <- function(mod, classif_vars) {
   ans <- tibble::tibble(ans)
   ans
 }
+
+#' @export
+make_codatamod_df.dpmaccount_datamod_lognorm <- function(mod, classif_vars) {
+  data <- mod$data
+  ratio <- mod$ratio
+  sd <- mod$sd
+  scale_ratio <- mod$scale_ratio
+  nm_series <- mod$nm_series
+  nm_data <- mod$nm_data
+  is_popn <- nm_series == "population"
+  if (is_popn) {
+    classif_vars <- add_init_to_classif_vars(classif_vars)
+  }
+  if (is.numeric(ratio)) {
+    tmp <- classif_vars
+    tmp$ratio <- ratio
+    ratio <- tmp
+  }
+  left_join <- function(x, y) merge(x, y, all.x = TRUE)
+  codatamod_df <- Reduce(left_join, list(classif_vars, data, ratio, sd))
+  codatamod_df$data <- codatamod_df$count
+  codatamod_df$is_obs <- as.integer(!is.na(codatamod_df$data))
+  ord <- with(codatamod_df, order(cohort, sex, time, age))
+  codatamod_df <- codatamod_df[ord, ]
+  codatamod_df$scale_ratio <- scale_ratio
+  if (is_popn) {
+    is_accession <- with(codatamod_df, age == time - cohort - 1L)
+    codatamod_df$ratio[is_accession] <- NA
+    codatamod_df$sd[is_accession] <- NA
+    codatamod_df$scale_ratio[is_accession] <- NA
+  }
+  ans <- nest_to_df(
+    df = codatamod_df,
+    nms_data = c(
+      "data", "is_obs", "ratio", "sd",
+      "scale_ratio",
+      "time", "age"
+    ),
+    nms_group = c("cohort", "sex"),
+    nm_value = "args"
+  )
+  ans$nm_series <- nm_series
+  ans$nm_data <- nm_data
+  ans$datamod <- lapply(ans$args, new_codatamod_lognorm)
+  ans <- ans[-match("args", names(ans))]
+  ans <- tibble::tibble(ans)
+  ans
+}
 ## 'print' --------------------------------------------------------------------
 
 #' @export
@@ -370,6 +418,26 @@ print.dpmaccount_datamod_poisson <- function(x, ...) {
   } else {
     cat("\nratio: ", x$ratio, "\n", sep = "")
   }
+  cat("\nscale_ratio: ", x$scale_ratio, "\n", sep = "")
+  invisible(x)
+}
+
+#' @export
+print.dpmaccount_datamod_lognorm <- function(x, ...) {
+  nchar_offset <- 10
+  cat("Log-Normal data model : An object of class \"dpmaccount_datamod_lognorm\"\n\n")
+  cat("dataset:", x$nm_data, "\n")
+  cat("series:", x$nm_series, "\n")
+  cat("data:\n")
+  print(summary(x$data))
+  if (is.data.frame(x$ratio)) {
+    cat("\nratio:\n")
+    print(summary(x$ratio))
+  } else {
+    cat("\nratio: ", x$ratio, "\n", sep = "")
+  }
+  cat("\nsd:\n")
+  print(summary(x$sd))
   cat("\nscale_ratio: ", x$scale_ratio, "\n", sep = "")
   invisible(x)
 }

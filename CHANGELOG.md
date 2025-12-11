@@ -1,6 +1,16 @@
 # Pre-release changes/updates
 
+
+# dpmaccount 0.3.1
+
+## New data model (log-normal - `datamod_lognorm()`)
+
+- Added a new (log-normal) data model `datamod_lognorm()`
+
+## Miscellaneous
+
 - Updated contributing guidance.
+
 
 # dpmaccount 0.3.0
 

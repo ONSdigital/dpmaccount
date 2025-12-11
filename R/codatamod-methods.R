@@ -65,6 +65,18 @@ get_const.dpmaccount_codatamod_poisson_nopar <- function(x) {
   c(x$ratio)
 }
 
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_lognorm_haspar <- function(x) {
+  c(x$ratio, x$sd, x$scale_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_const.dpmaccount_codatamod_lognorm_nopar <- function(x) {
+  c(x$ratio, x$sd)
+}
+
 
 ## 'get_data' -----------------------------------------------------------------
 
@@ -136,6 +148,15 @@ get_data_cols.dpmaccount_codatamod_poisson <- function(x, nm) {
   ans
 }
 
+## HAS_TESTS
+#' @export
+get_data_cols.dpmaccount_codatamod_lognorm <- function(x, nm) {
+  ans <- x[c("time", "age", "data")]
+  ans <- tibble::as_tibble(ans)
+  names(ans)[[3L]] <- nm
+  ans
+}
+
 ## 'get_has_par' --------------------------------------------------------------
 
 #' Get flag recording whether model has parameters
@@ -195,6 +216,18 @@ get_has_par.dpmaccount_codatamod_poisson_haspar <- function(x) {
 ## HAS_TESTS
 #' @export
 get_has_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
+  FALSE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_lognorm_haspar <- function(x) {
+  TRUE
+}
+
+## HAS_TESTS
+#' @export
+get_has_par.dpmaccount_codatamod_lognorm_nopar <- function(x) {
   FALSE
 }
 
@@ -305,6 +338,19 @@ get_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
   double()
 }
 
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_lognorm_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(0, times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_par.dpmaccount_codatamod_lognorm_nopar <- function(x) {
+  double()
+}
+
 
 ## 'get_nms_par' --------------------------------------------------------------
 
@@ -391,6 +437,23 @@ get_nms_par.dpmaccount_codatamod_poisson_nopar <- function(x) {
   character()
 }
 
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_lognorm_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  ans <- character()
+  if (has_mult_ratio) {
+    ans <- c(ans, "mult_ratio")
+  }
+  ans
+}
+
+## HAS_TESTS
+#' @export
+get_nms_par.dpmaccount_codatamod_lognorm_nopar <- function(x) {
+  character()
+}
+
 ## 'get_transform_datamod' ----------------------------------------------------
 
 #' Get transforms to apply to parameters estimated by TMB
@@ -454,6 +517,19 @@ get_transform_datamod.dpmaccount_codatamod_poisson_haspar <- function(x) {
 ## HAS_TESTS
 #' @export
 get_transform_datamod.dpmaccount_codatamod_poisson_nopar <- function(x) {
+  list()
+}
+
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_lognorm_haspar <- function(x) {
+  has_mult_ratio <- x$scale_ratio > 0
+  rep(list(identity), times = has_mult_ratio)
+}
+
+## HAS_TESTS
+#' @export
+get_transform_datamod.dpmaccount_codatamod_lognorm_nopar <- function(x) {
   list()
 }
 
@@ -590,6 +666,18 @@ make_str.dpmaccount_codatamod_poisson_haspar <- function(x, nm_data, nm_series) 
 #' @export
 make_str.dpmaccount_codatamod_poisson_nopar <- function(x, nm_data, nm_series) {
   sprintf("%12s ~ poisson(ratio * %s)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_lognorm_haspar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ LN(exp(alpha) * ratio * %s, sd^2)\n", nm_data, nm_series)
+}
+
+## HAS_TESTS
+#' @export
+make_str.dpmaccount_codatamod_lognorm_nopar <- function(x, nm_data, nm_series) {
+  sprintf("%12s ~ LN(ratio * %s, sd^2)\n", nm_data, nm_series)
 }
 
 
@@ -729,6 +817,40 @@ print.dpmaccount_codatamod_poisson_nopar <- function(x, ...) {
   invisible(x)
 }
 
+#' @export
+print.dpmaccount_codatamod_lognorm_haspar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    ratio = x$ratio,
+    sd = x$sd,
+    time = x$time,
+    age = x$age
+  )
+  cat("Log-Normal cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n")
+  cat("scale_ratio:", x$scale_ratio, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+#' @export
+print.dpmaccount_codatamod_lognorm_nopar <- function(x, ...) {
+  df <- data.frame(
+    data = x$data,
+    is_obs = x$is_obs,
+    ratio = x$ratio,
+    sd = x$sd,
+    time = x$time,
+    age = x$age
+  )
+  cat("Log-Normal cohort data model : An object of class \"", class(x)[[1L]], "\"\n\n", sep = "")
+  cat("i_mod:", x$i_mod, "\n\n")
+  print(df)
+  invisible(x)
+}
+
+
 
 
 ## 'rgen' -------------------------------------------------------------------
@@ -798,6 +920,34 @@ rgen.dpmaccount_codatamod_nbinom <- function(x) {
 #' @export
 rgen.dpmaccount_codatamod_poisson <- function(x) {
   new_data <- stats::rpois(length(x$data), lambda = x$ratio * x$data)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_lognorm_haspar <- function(x) {
+  # check that this is the right interpretation of the data model
+  alpha_c <- stats::rnorm(length(x$data), mean = 0, sd = x$scale_ratio)
+  mean_orig <- exp(alpha_c) * x$ratio * x$data
+  sd_orig <- x$sd
+  mu <- log(mean_orig^2 / sqrt(sd_orig^2 + mean_orig^2))
+  sd <- sqrt(log(1 + (sd_orig^2 / mean_orig^2)))
+  new_data <- stats::rlnorm(length(x$data), mean = mu, sd = sd)
+  new_data <- ifelse(new_data > 0, new_data, 0)
+  x$data <- new_data
+  return(x)
+}
+
+## NO_TESTS
+#' @export
+rgen.dpmaccount_codatamod_lognorm_nopar <- function(x) {
+  mean_orig <- x$ratio * x$data
+  sd_orig <- x$sd
+  mu <- log(mean_orig^2 / sqrt(sd_orig^2 + mean_orig^2))
+  sd <- sqrt(log(1 + (sd_orig^2 / mean_orig^2)))
+  new_data <- stats::rlnorm(length(x$data), mean = mu, sd = sd)
+  new_data <- ifelse(new_data > 0, new_data, 0)
   x$data <- new_data
   return(x)
 }

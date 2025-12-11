@@ -168,6 +168,45 @@ test_that("'new_codatamod_poisson' works with valid inputs, scale_ratio non-zero
   expect_s3_class(ans, "dpmaccount_codatamod")
 })
 
+## 'new_codatamod_lognorm' --------------------------------------------------
+
+test_that("'new_codatamod_lognorm' works with valid inputs - scale_ratio equal to 0", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
+    scale_ratio = 0
+  )
+  ans <- new_codatamod_lognorm(args)
+  expect_identical(ans$i_mod, 5L)
+  expect_s3_class(ans, "dpmaccount_codatamod_lognorm_nopar")
+  expect_s3_class(ans, "dpmaccount_codatamod_lognorm")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
+
+test_that("'new_codatamod_lognorm' works with valid inputs - scale_ratio is non-zero", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    data_tilde = rep(10, 10),
+    scale_ratio = 0.1
+  )
+  ans <- new_codatamod_lognorm(args)
+  expect_identical(ans$i_mod, 501L)
+  expect_identical(ans$scale_ratio, 0.1)
+  expect_s3_class(ans, "dpmaccount_codatamod_lognorm_haspar")
+  expect_s3_class(ans, "dpmaccount_codatamod_lognorm")
+  expect_s3_class(ans, "dpmaccount_codatamod")
+})
+
 ## 'validate_codatamod' --------------------------------------------------
 
 test_that("'validate_codatamod' works with valid inputs", {
@@ -346,5 +385,40 @@ test_that("'validate_codatamod_poisson' throws expected error when 'ratio' is NA
   expect_error(
     validate_codatamod_poisson(x),
     "element 10 of 'ratio' is NA \\(and element 10 of 'data' is not\\)"
+  )
+})
+
+## 'validate_codatamod_lognorm' ---------------------------------------------
+
+test_that("'validate_codatamod_lognorm' works with valid inputs", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10),
+    data_tilde = rep(10, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(validate_codatamod_lognorm(x), x)
+})
+
+test_that("'validate_codatamod_lognorm' throws expected error when 'sd' is NA", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = rep(1L, 10),
+    ratio = rep(1, 10),
+    sd = c(rep(0.25, 9), NA),
+    scale_ratio = rep(0, 10),
+    data_tilde = rep(10, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_error(
+    validate_codatamod_lognorm(x),
+    "element 10 of 'sd' is NA \\(and element 10 of 'data' is not\\)"
   )
 })

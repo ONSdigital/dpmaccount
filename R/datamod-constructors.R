@@ -1177,3 +1177,281 @@ new_datamod_poisson <- function(data,
   class(ans) <- c("dpmaccount_datamod_poisson", "dpmaccount_datamod")
   ans
 }
+
+## Log-Normal ----------------------------------------------------------
+#' Specify a data model based on a log-normal distribution
+#'
+#' Create a data model where the relationship between the
+#' reported and true counts is represented by a
+#' log-normal distribution.
+#'
+#' When `scale_ratio` and `scale_sd` are both `0`
+#' (the default), the log-normal data model has a
+#' probability density function
+#'
+#' \deqn{f_x(x) =  \frac{1}{x \sigma \sqrt{2 \pi}} e^{-\frac{(ln x - \mu)^2}{2 \sigma^2}}}
+#'
+#' which results in a log-posterior contribution of
+#'
+#' \deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)})^2}{2 (\sigma^{(s)})^2}}
+#'
+#' where
+#'
+#' - C are values of i for a particular combination of cohort, sex, and region
+#' - \eqn{x_i} is the true (unobserved) count for cell \eqn{i}
+#' - \eqn{y_i} is the observed count for cell \eqn{i}
+#' - \eqn{\mu} is the net coverage ratio for cell \eqn{i}
+#' - \eqn{\sigma_i} is the standard deviation for cell \eqn{i}
+#' - \eqn{s} is the s-th sample drawn from the posterior distribution during estimation.
+#'
+#' When `scale_ratio` is greater than `0`,
+#' the data model becomes
+#'
+#' \deqn{l(x_i \mid y_i, \mu_i^{(s)}, \sigma^{(s)}) = -\sum_{i \in C} \frac{(log(y_i) - log(x_i) - \mu_i ^{(s)} - {\alpha_{c_i}})^2}{2 (\sigma^{(s)})^2}}
+#' \deqn{\alpha_c \sim \mathcal{N}(0, A_{\alpha}^2)}
+#'
+#' where
+#'
+#' - \eqn{c_i} is the cohort associated with cell \eqn{i},
+#' - \eqn{\alpha_c} is multiplier applied to the coverage
+#'   ratio for cohort \eqn{c},
+#' - \eqn{A_{\alpha}} is `scale_ratio`
+#'
+#' In the extended model, \eqn{\alpha_c} is
+#' treated as unknown, and is estimated
+#' when [estimate_account()]
+#' is called.
+#'
+#' @section data:
+#'
+#' `data` is a data frame holding reported counts. It must always
+#' have the following variables:
+#' - `age` Non-negative whole numbers, starting at 0.
+#' - `sex` Character or factor. Must include the level `"Female"`.
+#' - `time` Whole numbers. Typically years, but can be
+#' quarters or months.
+#' - `count` Non-negative numbers, not necessarily integer.
+#'
+#' If the data being modelled describe ins or outs,
+#' then `data` must also include a variable
+#' called `cohort`, which uses the same units as `time`.
+#' If the data being modelled describe population,
+#' then `data` must not have a variable called cohort.
+#'
+#' If a combination of classifying variables is missing from
+#' `data`, then `datamod_lognorm` assumes that the corresponding
+#' value for `count` is `NA` (not `0`).
+#'
+#' @section ratio:
+#'
+#' The `ratio` argument governs net coverage ratios:
+#' the number of reported events or people expected for each
+#' actual event or person. If a data source is unbiased,
+#' then its coverage ratio is 1.
+#'
+#' `ratio` can be a single number or a data frame.
+#' If `ratio` is a single number, then the
+#' same coverage ratio is used for all values of
+#' the data. If `ratio` is a data frame,
+#' then different coverage rates are used for
+#' different parts of the data.
+#' If a classifying variable in `data` is
+#' omitted from `ratio`, then the coverage ratio
+#' is assumed to be constant
+#' across all levels of the omitted variable.
+#' Data frame `ratio` must have a column called `ratio`.
+#'
+#' @section sd:
+#'
+#' The `sd` argument governs the standard deviation of
+#' variability around the expected value. In general,
+#' the less reliable the data source is,
+#' the higher `sd` should be.
+#'
+#' Unlike `ratio`, `sd` can only be a data frame.
+#' It rarely makes sense to use the same value for
+#' `sd` across multiple values for the data.
+#'
+#' Data frame `sd` must have a variable called `sd`.
+#' All values for the `sd` variable must be positive
+#' (ie greater than zero).
+#'
+#' @section scale_ratio:
+#'
+#' Specifying non-zero values for `scale_ratio` adds flexibility to the data model.
+#' A non-zero value for `scale_ratio` implies that we
+#' may have systematically under-estimated or overestimated
+#' coverage ratios.
+#'
+#' @section nm_data:
+#'
+#' The name of the dataset. If no name is supplied,
+#' then the name of the `data` argument
+#' is used instead.
+#'
+#' @section nm_series:
+#'
+#' The name of the demographic series that the
+#' data refers to. One of
+#' - `"population"`
+#' - `"ins"`
+#' - `"outs"`
+#'
+#' @param data A data frame
+#' @param ratio A single number, or a data frame.
+#' Defaults to 1.
+#' @param sd A data frame.
+#' @param scale_ratio A non-negative number.
+#' Default is 0.
+#' @param nm_data Name of the dataset.
+#' @param nm_series Name of the demographic series
+#' that the data refers to.
+#'
+#' @return An object of class `"dpmaccount_datamod_lognorm"`.
+#'
+#' @examples
+#' reg_popn <- dpmaccount::gl_report_popn
+#' cover_ratio <- dpmaccount::gl_cover_ratio_popn
+#' cover_sd <- dpmaccount::gl_cover_sd_popn
+#'
+#' ## specify ratio and sd
+#' datamod_lognorm(
+#'   data = reg_popn,
+#'   ratio = cover_ratio,
+#'   sd = cover_sd,
+#'   nm_series = "population"
+#' )
+#'
+#' ## assume data source unbiased - use
+#' ## default, ratio = 1
+#' datamod_lognorm(
+#'   data = reg_popn,
+#'   sd = cover_sd,
+#'   nm_series = "population"
+#' )
+#'
+#' ## non-zero scale_ratio
+#' datamod_lognorm(
+#'   data = reg_popn,
+#'   sd = cover_sd,
+#'   scale_ratio = 0.1,
+#'   nm_series = "population"
+#' )
+#' @export
+datamod_lognorm <- function(data,
+                            ratio = 1,
+                            sd,
+                            scale_ratio = 0,
+                            nm_series,
+                            nm_data = NULL) {
+  if (is.null(nm_data)) {
+    nm_data <- deparse1(substitute(data))
+  } else {
+    checkmate::assert_string(nm_data,
+      min.chars = 1L
+    )
+  }
+  check_nm_data_clash(nm_data)
+  nm_series <- check_and_tidy_nm_series(nm_series)
+  check_is_not_bth_dth(nm_series)
+  is_popn <- identical(nm_series, "population")
+  check_df_data(
+    df = data,
+    nm_df = "data",
+    is_popn = is_popn
+  )
+  check_scale(
+    x = scale_ratio,
+    x_arg = "scale_ratio",
+    zero_ok = TRUE
+  )
+  if (is.numeric(ratio)) {
+    checkmate::assert_number(ratio,
+      lower = 0,
+      finite = TRUE
+    )
+  } else if (is.data.frame(ratio)) {
+    check_df_dataconst(
+      df = ratio,
+      nm_df = "ratio",
+      nm_measure_var = "ratio",
+      data = data,
+      is_popn = is_popn
+    )
+  } else {
+    stop(
+      gettextf(
+        "'%s' has class \"%s\"",
+        "ratio",
+        class(ratio)
+      ),
+      call. = FALSE
+    )
+  }
+  check_df_dataconst(
+    df = sd,
+    nm_df = "sd",
+    nm_measure_var = "sd",
+    data = data,
+    is_popn = is_popn
+  )
+  is_pos <- sd$sd > 0
+  i_nonpos <- match(FALSE, is_pos, nomatch = 0L)
+  if (i_nonpos > 0L) {
+    stop(
+      gettextf(
+        "non-positive value [%s] for variable '%s' : row %d of data frame '%s' in data model for dataset \"%s\"",
+        sd$sd[[i_nonpos]], "sd", i_nonpos, "sd", nm_data
+      ),
+      call. = FALSE
+    )
+  }
+  if (is_popn) {
+    data$cohort <- with(data, time - age)
+  }
+  data <- tibble::tibble(data)
+  new_datamod_lognorm(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = scale_ratio,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+}
+
+#' Create object of class "dpmaccount_datamod_lognorm"
+#'
+#' Assume inputs all checked and correct
+#'
+#' @param data A data frame
+#' @param ratio A single non-negative number
+#' or a data frame
+#' @param sd A data frame
+#' @param scale_ratio Non-negative number
+#' @param nm_series A string
+#' @param nm_data A string
+#'
+#' @returns An object of class "dpmaccount_datamod_lognorm"
+#'
+#' @noRd
+new_datamod_lognorm <- function(data,
+                                ratio,
+                                sd,
+                                scale_ratio,
+                                nm_series,
+                                nm_data) {
+  ans <- list(
+    data = data,
+    ratio = ratio,
+    sd = sd,
+    scale_ratio = scale_ratio,
+    nm_series = nm_series,
+    nm_data = nm_data
+  )
+  class(ans) <- c(
+    "dpmaccount_datamod_lognorm",
+    "dpmaccount_datamod"
+  )
+  ans
+}

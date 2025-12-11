@@ -114,6 +114,34 @@ test_that("'get_const' works with 'dpmaccount_codatamod_poisson_nopar'", {
   expect_identical(get_const(x), c(x$ratio))
 })
 
+test_that("'get_const' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0.2, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_const(x), c(x$ratio, x$sd, x$scale_ratio))
+})
+
+test_that("'get_const' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = 0,
+    sd = rep(0.25, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_const(x), c(x$ratio, x$sd))
+})
+
 ## 'get_data' -----------------------------------------------------------------
 
 test_that("'get_data' works with 'dpmaccount_codatamod_norm'", {
@@ -170,6 +198,20 @@ test_that("'get_data' works with 'dpmaccount_codatamod_poisson'", {
     scale_ratio = rep(0, 10)
   )
   x <- new_codatamod_poisson(args)
+  expect_identical(get_data(x), x$data)
+})
+
+test_that("'get_data' works with 'dpmaccount_codatamod_lognorm'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
   expect_identical(get_data(x), x$data)
 })
 
@@ -256,6 +298,25 @@ test_that("'get_data_cols' works with 'dpmaccount_codatamod_poisson'", {
   expect_identical(ans_obtained, ans_expected)
 })
 
+test_that("'get_data_cols' works with 'dpmaccount_codatamod_lognorm'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  ans_obtained <- get_data_cols(x, nm = "dataset1")
+  ans_expected <- tibble::tibble(
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    age = rep(0:4, each = 2),
+    dataset1 = as.double(1:10)
+  )
+  expect_identical(ans_obtained, ans_expected)
+})
 
 ## 'get_has_par' -----------------------------------------------------------------
 
@@ -373,6 +434,35 @@ test_that("'get_has_par' works with 'dpmaccount_codatamod_poisson_nopar'", {
   expect_false(get_has_par(x))
 })
 
+test_that("'get_has_par' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0.3, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_true(get_has_par(x))
+})
+
+test_that("'get_has_par' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_false(get_has_par(x))
+})
+
+
 
 ## 'get_i_mod' -----------------------------------------------------------------
 
@@ -488,6 +578,34 @@ test_that("'get_i_mod' works with 'dpmaccount_codatamod_poisson_nopar'", {
   )
   x <- new_codatamod_poisson(args)
   expect_identical(get_i_mod(x), 4L)
+})
+
+test_that("'get_i_mod' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0.3, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_i_mod(x), 501L)
+})
+
+test_that("'get_i_mod' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_i_mod(x), 5L)
 })
 
 ## 'get_is_obs' ---------------------------------------------------------------
@@ -639,6 +757,35 @@ test_that("'get_nms_par' works with 'dpmaccount_codatamod_poisson_nopar'", {
   expect_identical(get_nms_par(x), character())
 })
 
+test_that("'get_nms_par' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0.3, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_nms_par(x), "mult_ratio")
+})
+
+test_that("'get_nms_par' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10),
+    scale_sd = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_nms_par(x), character())
+})
+
 ## 'get_par' -----------------------------------------------------------------
 
 test_that("'get_par' works with 'dpmaccount_codatamod_norm_haspar' - one parameter", {
@@ -768,6 +915,32 @@ test_that("'get_par' works with 'dpmaccount_codatamod_poisson_nopar'", {
     scale_ratio = rep(0, 10)
   )
   x <- new_codatamod_poisson(args)
+  expect_identical(get_par(x), double())
+})
+
+test_that("'get_par' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = rep(0.2, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_par(x), 0)
+})
+
+test_that("'get_par' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
   expect_identical(get_par(x), double())
 })
 
@@ -902,6 +1075,31 @@ test_that("'get_transform_datamod' works with 'dpmaccount_codatamod_poisson_nopa
   expect_identical(get_transform_datamod(x), list())
 })
 
+test_that("'get_transform_datamod' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = rep(0.1, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_transform_datamod(x), list(identity))
+})
+
+test_that("'get_transform_datamod' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(get_transform_datamod(x), list())
+})
 
 ## 'increments_codatamod' -----------------------------------------------------
 
@@ -1163,7 +1361,37 @@ test_that("'make_str' works with 'dpmaccount_codatamod_poisson_nopar'", {
   )
 })
 
+test_that("'make_str' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = rep(0.1, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(
+    make_str(x, nm_data = "indata", nm_series = "ins"),
+    "      indata ~ LN(exp(alpha) * ratio * ins, sd^2)\n"
+  )
+})
 
+test_that("'make_str' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  expect_identical(
+    make_str(x, nm_data = "indata", nm_series = "ins"),
+    "      indata ~ LN(ratio * ins, sd^2)\n"
+  )
+})
 
 
 ## 'rgen' -----------------------------------------------------------------
@@ -1349,5 +1577,43 @@ test_that("'rgen' works with 'dpmaccount_codatamod_poisson_nopar'", {
 
   check_data <- rpois(length(x$data), lambda = x$ratio * x$data)
 
+  expect_equal(gened_data$data, check_data)
+})
+
+test_that("'rgen' works with 'dpmaccount_codatamod_lognorm_haspar'", {
+  set.seed(1)
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0.3, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  gened_data <- rgen(x)
+  set.seed(1)
+  alpha_c <- stats::rnorm(length(args$data), mean = 0, sd = args$scale_ratio) # α_c \sim \mathcal{N}(0, A_{α}^2)
+  check_data <- stats::rlnorm(length(args$data), mean = log((exp(alpha_c) * args$ratio * args$data)^2 / sqrt(args$sd^2 + (exp(alpha_c) * args$ratio * args$data)^2)), sd = sqrt(log(1 + (args$sd^2 / (exp(alpha_c) * args$ratio * args$data)^2))))
+  expect_equal(gened_data$data, check_data)
+})
+
+test_that("'rgen' works with 'dpmaccount_codatamod_lognorm_nopar'", {
+  set.seed(1)
+  args <- data.frame(
+    data = as.double(1:10),
+    age = rep(0:4, each = 2),
+    time = c(2000L, rep(2001:2004, each = 2), 2005L),
+    is_obs = c(0L, rep(1L, 9)),
+    ratio = rep(1, 10),
+    sd = rep(0.25, 10),
+    scale_ratio = rep(0, 10)
+  )
+  x <- new_codatamod_lognorm(args)
+  gened_data <- rgen(x)
+  set.seed(1)
+  alpha_c <- stats::rnorm(length(args$data), mean = 0, sd = args$scale_ratio) # α_c \sim \mathcal{N}(0, A_{α}^2)
+  check_data <- stats::rlnorm(length(args$data), mean = log((exp(alpha_c) * args$ratio * args$data)^2 / sqrt(args$sd^2 + (exp(alpha_c) * args$ratio * args$data)^2)), sd = sqrt(log(1 + (args$sd^2 / (exp(alpha_c) * args$ratio * args$data)^2))))
   expect_equal(gened_data$data, check_data)
 })
