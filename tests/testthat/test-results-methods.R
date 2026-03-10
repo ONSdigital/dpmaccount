@@ -177,7 +177,6 @@ test_that("'components' works collapse is 'cohort'", {
 })
 
 
-
 ## 'diagnostics' --------------------------------------------------------------
 
 test_that("'diagnostics' works", {
@@ -188,7 +187,6 @@ test_that("'diagnostics' works", {
   ans <- diagnostics(x)
   expect_true(tibble::is_tibble(ans))
 })
-
 
 
 ## 'summary' ------------------------------------------------------------------
@@ -263,7 +261,6 @@ test_that("summary.dpmaccount_results works, including printing", {
   )
   expect_false(anyNA(unlist(ans)))
 })
-
 
 
 ## 'post_pred.dpmaccount_results' ------------------------------------------------------------------

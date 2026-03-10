@@ -920,7 +920,5 @@ post_pred.dpmaccount_results <- function(object,
   }
 
 
-
-
   return(ans_out)
 }

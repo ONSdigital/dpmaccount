@@ -450,7 +450,6 @@ check_df <- function(df) {
 }
 
 
-
 ## HAS_TESTS
 #' Check whether data frame has required classification variables
 #'

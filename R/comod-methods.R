@@ -270,7 +270,6 @@ is_fitted.dpmaccount_comod <- function(mod) {
 }
 
 
-
 ## 'print' --------------------------------------------------------------------
 
 
@@ -286,7 +285,6 @@ print.dpmaccount_comod <- function(x, ...) {
   cat(" object of class \"", class(x), "\">\n", sep = "")
   invisible(x)
 }
-
 
 
 ## summary --------------------------------------------------------------------

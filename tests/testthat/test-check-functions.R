@@ -1403,7 +1403,6 @@ test_that("'check_sex' returns correct error with invalid inputs (Female/Male/Ot
 })
 
 
-
 ## 'check_sex_complete' -------------------------------------------------------
 
 test_that("'check_sex_complete' returns TRUE with valid inputs", {
