@@ -123,6 +123,7 @@
 estimate_account <- function(sysmods,
                              datamods = list(),
                              keep_adfun = FALSE,
+                             include_sysmods = 2,
                              seed_in = NULL) {
   ## check inputs
   check_sysmods(sysmods)
@@ -164,7 +165,7 @@ estimate_account <- function(sysmods,
   ## create "comod" (cohort model) objects
   comod <- .mapply(new_comod, dots = df, MoreArgs = list())
   ## fit models
-  fitted <- lapply(comod, fit, keep_adfun = keep_adfun)
+  fitted <- lapply(comod, fit, keep_adfun = keep_adfun, include_sysmods = include_sysmods)
   # draw seeds
   if (!is.null(seed_in)) {
     set.seed(seed_in)

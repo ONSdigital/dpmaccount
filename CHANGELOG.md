@@ -1,5 +1,12 @@
 # Pre-release changes/updates
 
+# dpmaccount 0.3.2
+
+## Implemented variable system model inclusion
+
+- Modified the objective function (dpmaccount.cpp) to have variable system model inclusion based on a 'include_sysmods' flag.
+- Modified the fit.dpmaccount_comod object to accept a 'include_sysmods' flag and pass it to the objective function through the MakeADFun() method.
+- Modified estimate_account() to accept a new 'include_sysmods' input (0 = no system models, 1 = births/deaths system models, 2 = all system models (default))
 
 # dpmaccount 0.3.1
 

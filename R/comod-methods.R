@@ -32,7 +32,7 @@ generics::fit
 #' @keywords internal
 #'
 #' @export
-fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, ...) {
+fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, include_sysmods = 2, ...) {
   prior_stk_init <- object$prior_stk_init
   count_bthdth <- object$count_bthdth
   sysmod_bth <- object$sysmod_bth
@@ -80,7 +80,8 @@ fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, ...) {
     i_mod_all_outs = get_i_mod_all(datamods_outs),
     has_par_all_stk = get_has_par_all(datamods_stk),
     has_par_all_ins = get_has_par_all(datamods_ins),
-    has_par_all_outs = get_has_par_all(datamods_outs)
+    has_par_all_outs = get_has_par_all(datamods_outs),
+    include_sysmods = include_sysmods
   )
   parameters <- make_parameters(
     mean_stk_init = prior_stk_init$mean,
