@@ -137,3 +137,17 @@ test_that("'estimate_account' works with keep_adfun = TRUE", {
   ans <- do.call(estimate_account, args)
   expect_s3_class(ans, "dpmaccount_results")
 })
+
+test_that("'estimate_account' works with include_sysmods = c(0, 0, 0, 0)", {
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models(), seed_in = 0)
+  args <- c(args, list(include_sysmods = c(0, 0, 0, 0)))
+  ans <- do.call(estimate_account, args)
+  expect_s3_class(ans, "dpmaccount_results")
+})
+
+test_that("'estimate_account' works with include_sysmods = c(TRUE, TRUE, FALSE, FALSE)", {
+  args <- list(sysmods = sim_arg_system_models(), datamods = sim_arg_data_models(), seed_in = 0)
+  args <- c(args, list(include_sysmods = c(TRUE, TRUE, FALSE, FALSE)))
+  ans <- do.call(estimate_account, args)
+  expect_s3_class(ans, "dpmaccount_results")
+})

@@ -24,6 +24,13 @@ test_that("'fit' works with valid data - existing cohort", {
   expect_true(!is.na(ans$mean[[1]]))
 })
 
+test_that("'fit' works with include_sysmods = c(0, 0, 0, 0)", {
+  x <- sim_comod(is_new_cohort = FALSE)
+  ans <- fit(x, include_sysmods = c(0, 0, 0, 0))
+  expect_s3_class(ans, "dpmaccount_comod")
+  expect_true(!is.na(ans$mean[[1]]))
+})
+
 
 ## 'get_nm_data_bth' ----------------------------------------------------------
 
