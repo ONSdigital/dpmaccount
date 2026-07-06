@@ -28,7 +28,12 @@
 #' @param keep_adfun Whether to keep the functions
 #' created internally by `TMB::MakeADFun()`.
 #' For expert use only. Defaults to `FALSE`.
-#' @param seed_in Integer seed used to generate account seeding. Defaults to NULL to generate a random seeding.
+#' @param seed_in Integer seed used to generate account seeding. 
+#' Defaults to NULL to generate a random seeding.
+#' @param include_sysmods Vector of flags specifying which system models
+#' to include in the estimation, in the format c(births, deaths, ins, outs), 
+#' e.g. include_sysmods = c(1, 1, 0, 0) to include births and deaths, and 
+#' to exclude ins and outs. Defaults to c(1, 1, 1, 1).
 #'
 #' @returns An object of class `"dpmaccount_results"`.
 #'
@@ -123,7 +128,7 @@
 estimate_account <- function(sysmods,
                              datamods = list(),
                              keep_adfun = FALSE,
-                             include_sysmods = 2,
+                             include_sysmods = c(1, 1, 1, 1),
                              seed_in = NULL) {
   ## check inputs
   check_sysmods(sysmods)

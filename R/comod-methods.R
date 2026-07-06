@@ -25,6 +25,10 @@ generics::fit
 #' @param object A `dpmaccount_comod` object.
 #' @param keep_adfun Whether to keep function created
 #' by TMB::MakeADFun.
+#' @param include_sysmods Vector of flags specifying which system models
+#' to include in the estimation, in the format c(births, deaths, ins, outs), 
+#' e.g. include_sysmods = c(1, 1, 0, 0) to include births and deaths, and 
+#' to exclude ins and outs. Defaults to c(1, 1, 1, 1).
 #' @param ... Not currently used.
 #'
 #' @returns A fitted `dpmaccount_comod` object
@@ -32,7 +36,7 @@ generics::fit
 #' @keywords internal
 #'
 #' @export
-fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, include_sysmods = 2, ...) {
+fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, include_sysmods = c(1,1,1,1), ...) {
   prior_stk_init <- object$prior_stk_init
   count_bthdth <- object$count_bthdth
   sysmod_bth <- object$sysmod_bth

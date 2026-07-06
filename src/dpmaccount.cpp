@@ -395,7 +395,7 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR(has_par_all_stk);
   DATA_IVECTOR(has_par_all_ins);
   DATA_IVECTOR(has_par_all_outs);
-  DATA_INTEGER(include_sysmods);
+  DATA_VECTOR(include_sysmods);
 
   // parameters returned to R
   
@@ -464,7 +464,7 @@ Type objective_function<Type>::operator() ()
     }
   }
   
-  if (include_sysmods == 2) {
+  if(include_sysmods[0] == 1L) {
     // contribution from val_bth
     for (int k = 0; k < K; k++) {
       if (has_bth[k]) {
@@ -472,31 +472,24 @@ Type objective_function<Type>::operator() ()
         ans -= dnbinom(val_bth[k], size_bth[k], prob_bth_k, true);
       }
     }
-  
-    // contribution from val_dth, val_ins, val_outs
-  
+  }
+  if(include_sysmods[1] == 1L) {
+    // contribution from val_dth
+    vector<Type> prob_dth = size_dth / (mean_dth * exposure + size_dth);
+    ans -= dnbinom(val_dth, size_dth, prob_dth, true).sum();
+  }
+  if(include_sysmods[2] == 1L) {
+    // contribution from val_ins
     vector<Type> mean_ins_lexis = 0.5 * mean_ins; // ins for one Lexis triangle; mean_ins refers to a whole year
     vector<Type> prob_ins = size_ins / (mean_ins_lexis + size_ins);
     ans -= dnbinom(val_ins, size_ins, prob_ins, true).sum();
-    vector<Type> prob_dth = size_dth / (mean_dth * exposure + size_dth);
+    ans -= log_val_ins.sum(); // Jacobian
+  }
+  if(include_sysmods[3] == 1L) {
+    // contribution val_outs
     vector<Type> prob_outs = size_outs / (mean_outs * exposure + size_outs);
-    ans -= dnbinom(val_dth, size_dth, prob_dth, true).sum();
     ans -= dnbinom(val_outs, size_outs, prob_outs, true).sum();
-    ans -= log_val_ins.sum() + log_val_outs.sum(); // Jacobians
-  } else if (include_sysmods == 1) {
-    // contribution from val_bth
-    for (int k = 0; k < K; k++) {
-      if (has_bth[k]) {
-        Type prob_bth_k = size_bth[k] / (mean_bth[k] * exposure[k] + size_bth[k]);
-        ans -= dnbinom(val_bth[k], size_bth[k], prob_bth_k, true);
-      }
-    }
-    
-    // contribution from val_dth
-  
-    vector<Type> prob_dth = size_dth / (mean_dth * exposure + size_dth);
-    ans -= dnbinom(val_dth, size_dth, prob_dth, true).sum();
-
+    ans -= log_val_outs.sum(); // Jacobian
   }
   
   // contribution from data - stock
