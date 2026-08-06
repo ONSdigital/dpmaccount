@@ -31,6 +31,13 @@ test_that("'fit' works with include_sysmods = c(0, 0, 0, 0)", {
   expect_true(!is.na(ans$mean[[1]]))
 })
 
+test_that("'fit' works with include_sysmods = c(TRUE, TRUE, FALSE, FALSE)", {
+  x <- sim_comod(is_new_cohort = FALSE)
+  ans <- fit(x, include_sysmods = c(TRUE, TRUE, FALSE, FALSE))
+  expect_s3_class(ans, "dpmaccount_comod")
+  expect_true(!is.na(ans$mean[[1]]))
+})
+
 
 ## 'get_nm_data_bth' ----------------------------------------------------------
 
