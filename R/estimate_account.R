@@ -138,6 +138,7 @@ estimate_account <- function(sysmods,
     datamods = datamods
   )
   checkmate::assert_flag(keep_adfun)
+  check_include_sysmods(include_sysmods)
   ## make 'classif_vars' data frame, holding all
   ## levels of all classification variables: at
   ## present get these from the data for deaths

@@ -1733,3 +1733,71 @@ test_that("'check_time_complete' returns correct error with invalid inputs", {
     "'time' variable in data frame 'data' has gaps : missing value '2001'"
   )
 })
+
+
+## 'check_include_sysmods' -----------------------------------------------------
+
+test_that("check_include_sysmods passes silently for valid inputs", {
+  # Numeric 0/1
+  expect_silent(check_include_sysmods(c(1, 0, 1, 0)))
+
+  # Logical TRUE/FALSE
+  expect_silent(check_include_sysmods(c(TRUE, FALSE, TRUE, FALSE)))
+
+  # Check that it correctly returns the input (invisibly)
+  valid_input <- c(1, 1, 0, 0)
+  expect_equal(check_include_sysmods(valid_input), valid_input)
+})
+
+test_that("check_include_sysmods catches invalid lengths.", {
+  # Too short
+  expect_error(
+    check_include_sysmods(c(1, 1, 0)),
+    "Expected length 4, but got length 3"
+  )
+
+  # Too long
+  expect_error(
+    check_include_sysmods(c(1, 1, 0, 0, 0)),
+    "Expected length 4, but got length 5"
+  )
+
+  # NULL/ Empty
+  expect_error(
+    check_include_sysmods(NULL),
+    "Expected length 4, but got length 0"
+  )
+})
+
+test_that("check_include_sysmods catches invalid values of exactly length 4", {
+  # Invalid integers
+  expect_error(
+    check_include_sysmods(c(1, 0, 2, 3)),
+    "Found invalid values: 2, 3"
+  )
+
+  # Missing values (NA)
+  expect_error(
+    check_include_sysmods(c(1, 0, NA, 1)),
+    "Found invalid values: NA"
+  )
+
+  # Characters/Strings
+  expect_error(
+    check_include_sysmods(c("TRUE", "FALSE", "TRUE", "FALSE")),
+    "Found invalid values: TRUE, FALSE"
+  )
+})
+
+test_that("check_include_sysmods catches compound errors (length AND values)", {
+  # Regex `.*` allows us to check that BOTH bullet points are in the same error message
+  expect_error(
+    check_include_sysmods(c(1, 5, 9)),
+    ".*Expected length 4, but got length 3.*Found invalid values: 5, 9.*"
+  )
+
+  expect_error(
+    check_include_sysmods(c(99, NA, "Z", 1, 0, 1)),
+    ".*Expected length 4, but got length 6.*Found invalid values: 99, NA, Z.*"
+  )
+})

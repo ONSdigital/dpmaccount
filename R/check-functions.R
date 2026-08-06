@@ -1455,3 +1455,44 @@ check_time_complete <- function(df, nm_df) {
   }
   invisible(TRUE)
 }
+
+
+## HAS_TESTS
+#' Check for Valid System Model Inclusion Flag Vectors
+#'
+#' @description
+#' Checks that the 'include_sysmods' vector contains exactly 4 binary values (0,
+#' 1, TRUE, or FALSE). If validation fails, it provides a detailed error message
+#' specifying the exact length found and/or the specific invalid values.
+#'
+#' @param include_sysmods A vector expected to be length 4 and contain only 0/1 or FALSE/TRUE.
+#'
+#' @returns include_sysmods, invisibly
+#'
+#' @noRd
+check_include_sysmods <- function(include_sysmods) {
+  errors <- character() # Initialise an empty error message vector
+
+  # Check vector length
+  vec_length <- length(include_sysmods)
+  if (vec_length != 4) {
+    errors <- c(errors, sprintf("Expected length 4, but got length %d.", vec_length))
+  }
+
+  # Check for invalid values
+  if (!all(include_sysmods %in% 0:1)) {
+    invalid_cols <- unique(include_sysmods[!(include_sysmods %in% 0:1)]) # Extract unique invalid values
+
+    invalid_str <- paste(invalid_cols, collapse = ", ") # Format invalid values into a comma-separated string
+    errors <- c(errors, sprintf("Found invalid values: %s.", invalid_str))
+  }
+
+  if (length(errors) > 0) {
+    stop(
+      "Invalid input for 'include_sysmods':\n * ",
+      paste(errors, collapse = "\n * "),
+      call. = FALSE
+    )
+  }
+  invisible((include_sysmods))
+}
