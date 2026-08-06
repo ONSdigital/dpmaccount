@@ -4,11 +4,11 @@
 
 ## Implemented variable system model inclusion
 
-- Modified the objective function (dpmaccount.cpp) to allow variable system model inclusion based on a new 'include_sysmods' flag vector. This flag vector indicates whether to include (1) or exclude (0) each of the system models (c(births, deaths, ins, outs), e.g. c(1, 1, 0, 0) includes births and deaths system models, excludes ins and out system models). 
+- Modified the objective function (dpmaccount.cpp) to allow variable system model inclusion based on a new 'include_sysmods' flag vector. This flag vector indicates whether to include (1) or exclude (0) each of the system models (c(births, deaths, ins, outs), e.g. c(1, 1, 0, 0) includes births and deaths system models, excludes ins and outs system models). 
 
 - Modified `fit.dpmaccount_comod` method (comod-methods.R) to accept the 'include_sysmods' flag vector and pass it to the objective function through the MakeADFun() method.
 
-- Modified `estimate_account()` (estimate_account.R) to accept the new 'include_sysmods' flag vector input, in the format c(births, deaths, ins, outs), e.g. c(1, 1, 0, 0) includes births and deaths system models, excludes ins and out system models. 
+- Modified `estimate_account()` (estimate_account.R) to accept the new 'include_sysmods' flag vector input, in the format c(births, deaths, ins, outs), e.g. c(1, 1, 0, 0) includes births and deaths system models, excludes ins and outs system models. 
 
 
 # dpmaccount 0.3.1
