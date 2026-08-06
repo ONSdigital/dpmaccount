@@ -247,7 +247,6 @@ test_that("'aggregate_count' works with valid inputs - two variables, na_rm is F
 })
 
 
-
 ## 'aggregate_rate' ----------------------------------------------------------
 
 test_that("'aggregate_rate' works with valid inputs - na_rm is FALSE", {
@@ -426,7 +425,6 @@ test_that("'draw_counts_inner works with 'stk_init' known - adj needed", {
   expect_identical(ncol(ans$val_stk), n_draw)
   expect_true(ans$n_adj > 0L)
 })
-
 
 
 ## 'draw_counts_inner' --------------------------------------------------------

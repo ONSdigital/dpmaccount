@@ -25,6 +25,10 @@ generics::fit
 #' @param object A `dpmaccount_comod` object.
 #' @param keep_adfun Whether to keep function created
 #' by TMB::MakeADFun.
+#' @param include_sysmods Vector of flags specifying which system models
+#' to include in the estimation, in the format c(births, deaths, ins, outs),
+#' e.g. include_sysmods = c(1, 1, 0, 0) to include births and deaths, and
+#' to exclude ins and outs. Defaults to c(1, 1, 1, 1).
 #' @param ... Not currently used.
 #'
 #' @returns A fitted `dpmaccount_comod` object
@@ -32,7 +36,7 @@ generics::fit
 #' @keywords internal
 #'
 #' @export
-fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, ...) {
+fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, include_sysmods = c(1, 1, 1, 1), ...) {
   prior_stk_init <- object$prior_stk_init
   count_bthdth <- object$count_bthdth
   sysmod_bth <- object$sysmod_bth
@@ -80,7 +84,8 @@ fit.dpmaccount_comod <- function(object, keep_adfun = FALSE, ...) {
     i_mod_all_outs = get_i_mod_all(datamods_outs),
     has_par_all_stk = get_has_par_all(datamods_stk),
     has_par_all_ins = get_has_par_all(datamods_ins),
-    has_par_all_outs = get_has_par_all(datamods_outs)
+    has_par_all_outs = get_has_par_all(datamods_outs),
+    include_sysmods = include_sysmods
   )
   parameters <- make_parameters(
     mean_stk_init = prior_stk_init$mean,
@@ -269,7 +274,6 @@ is_fitted.dpmaccount_comod <- function(mod) {
 }
 
 
-
 ## 'print' --------------------------------------------------------------------
 
 
@@ -285,7 +289,6 @@ print.dpmaccount_comod <- function(x, ...) {
   cat(" object of class \"", class(x), "\">\n", sep = "")
   invisible(x)
 }
-
 
 
 ## summary --------------------------------------------------------------------

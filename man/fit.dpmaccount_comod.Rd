@@ -4,13 +4,18 @@
 \alias{fit.dpmaccount_comod}
 \title{Fit a cohort model}
 \usage{
-\method{fit}{dpmaccount_comod}(object, keep_adfun = FALSE, ...)
+\method{fit}{dpmaccount_comod}(object, keep_adfun = FALSE, include_sysmods = c(1, 1, 1, 1), ...)
 }
 \arguments{
 \item{object}{A \code{dpmaccount_comod} object.}
 
 \item{keep_adfun}{Whether to keep function created
 by TMB::MakeADFun.}
+
+\item{include_sysmods}{Vector of flags specifying which system models
+to include in the estimation, in the format c(births, deaths, ins, outs),
+e.g. include_sysmods = c(1, 1, 0, 0) to include births and deaths, and
+to exclude ins and outs. Defaults to c(1, 1, 1, 1).}
 
 \item{...}{Not currently used.}
 }

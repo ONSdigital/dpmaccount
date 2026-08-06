@@ -463,7 +463,6 @@ test_that("'get_has_par' works with 'dpmaccount_codatamod_lognorm_nopar'", {
 })
 
 
-
 ## 'get_i_mod' -----------------------------------------------------------------
 
 test_that("'get_i_mod' works with 'dpmaccount_codatamod_norm_haspar'", {

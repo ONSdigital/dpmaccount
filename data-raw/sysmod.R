@@ -113,8 +113,6 @@ save(gl_sysmod_mean_emig,
 )
 
 
-
-
 ## library(ggplot2)
 ## mod_deaths %>%
 ##     augment() %>%
@@ -135,7 +133,6 @@ save(gl_sysmod_mean_emig,
 ##     geom_line(aes(y = .expected)) +
 ##     scale_y_log10() +
 ##     geom_point(aes(y = .observed), size = 0.2)
-
 
 
 ## library(ggplot2)
