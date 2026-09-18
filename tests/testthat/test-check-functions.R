@@ -1784,8 +1784,8 @@ test_that("check_include_sysmods catches invalid values of exactly length 4", {
 
   # Characters/Strings
   expect_error(
-    check_include_sysmods(c("TRUE", "FALSE", "TRUE", "FALSE")),
-    "Found invalid values: TRUE, FALSE"
+    check_include_sysmods(c("INCLUDE", "EXCLUDE", "INCLUDE", "EXCLUDE")),
+    "Found invalid values: INCLUDE, EXCLUDE"
   )
 })
 
