@@ -8,6 +8,7 @@ estimate_account(
   sysmods,
   datamods = list(),
   keep_adfun = FALSE,
+  include_sysmods = c(1, 1, 1, 1),
   seed_in = NULL
 )
 }
@@ -25,7 +26,13 @@ and outward movements.}
 created internally by \code{TMB::MakeADFun()}.
 For expert use only. Defaults to \code{FALSE}.}
 
-\item{seed_in}{Integer seed used to generate account seeding. Defaults to NULL to generate a random seeding.}
+\item{include_sysmods}{Vector of flags specifying which system models
+to include in the estimation, in the format c(births, deaths, ins, outs),
+e.g. include_sysmods = c(1, 1, 0, 0) to include births and deaths, and
+to exclude ins and outs. Defaults to c(1, 1, 1, 1).}
+
+\item{seed_in}{Integer seed used to generate account seeding.
+Defaults to NULL to generate a random seeding.}
 }
 \value{
 An object of class \code{"dpmaccount_results"}.

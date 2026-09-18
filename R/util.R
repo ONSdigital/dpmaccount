@@ -245,7 +245,6 @@ make_seed_account <- function(seed_in = NULL) {
 }
 
 
-
 #' Convert the seed_list in an old (pre-v0.6.3) dpmaccount_results object
 #'
 #' Function to convert the seed_list in an old (pre-v0.6.3) dpmaccount_results

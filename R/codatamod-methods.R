@@ -3,7 +3,6 @@
 ## https://github.com/r-lib/devtools/issues/2293
 
 
-
 ## 'get_const' -------------------------------------------------------------------
 
 #' Get parameters not estimated by TMB
@@ -849,8 +848,6 @@ print.dpmaccount_codatamod_lognorm_nopar <- function(x, ...) {
   print(df)
   invisible(x)
 }
-
-
 
 
 ## 'rgen' -------------------------------------------------------------------
